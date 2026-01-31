@@ -190,13 +190,23 @@ export function UI() {
           >
             START
           </button>
-          <p style={{
-            fontSize: '12px',
+          <div style={{
+            fontSize: '11px',
             opacity: 0.5,
             marginTop: '30px',
+            lineHeight: '1.8',
           }}>
-            MOVE MOUSE TO CONTROL • CLICK TO LOCK-ON
-          </p>
+            <div style={{ marginBottom: '10px' }}>
+              <span style={{ color: '#00ffff' }}>KEYBOARD/MOUSE</span>
+              <br />
+              MOUSE = AIM • WASD = MOVE • SPACE/CLICK = FIRE • E = OVERDRIVE
+            </div>
+            <div>
+              <span style={{ color: '#ff00ff' }}>GAMEPAD</span>
+              <br />
+              LEFT STICK = MOVE • RIGHT STICK = AIM • RT/A = FIRE • Y = OVERDRIVE
+            </div>
+          </div>
         </div>
       )}
 
