@@ -1,14 +1,26 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import { useControls } from 'leva'
 import * as THREE from 'three'
 import { Player } from './Player'
 import { RailTrack } from './RailTrack'
-import { EnemyPool } from './EnemyPool'
+import { EnemyRenderer } from './EnemyRenderer'
+import { ProjectileRenderer } from './ProjectileRenderer'
 import { PostFX } from './PostFX'
-import { useGameStore } from '../stores/gameStore'
 import { useSettingsStore } from '../stores/settingsStore'
-import { tcl } from '../utils/debug'
+import { useIsPlaying, sendGameEvent } from '../hooks/useGameMachine'
+import {
+  initializeEntityPools,
+  movementSystem,
+  enemySpawnSystem,
+  projectileSystem,
+  despawnSystem,
+  autoLockTargets,
+  clearAllLocks,
+  fireProjectiles,
+  getLockedEntityIds,
+} from '../ecs'
 
 export function Experience() {
   const { showOrbitControls, showStars } = useControls('Debug', {
@@ -19,8 +31,22 @@ export function Experience() {
   const [playerPosition, setPlayerPosition] = useState(new THREE.Vector3(0, 2, 0))
   const [playerQuaternion, setPlayerQuaternion] = useState(new THREE.Quaternion())
 
-  const gameState = useGameStore((state) => state.gameState)
+  const isPlaying = useIsPlaying()
   const graphicsSettings = useSettingsStore((state) => state.graphicsSettings)
+  const difficultySettings = useSettingsStore((state) => state.difficultySettings)
+
+  // ECS state
+  const initialized = useRef(false)
+  const isLocking = useRef(false)
+  const wasLocking = useRef(false)
+  const aimPosition = useRef({ x: 0, y: 0 })
+  const lockedTargets = useRef<number[]>([])
+
+  // Initialize entity pools
+  if (!initialized.current) {
+    initializeEntityPools()
+    initialized.current = true
+  }
 
   const handleProgressUpdate = useCallback((
     _progress: number,
@@ -32,12 +58,76 @@ export function Experience() {
   }, [])
 
   const handleFireStart = useCallback(() => {
-    tcl('fireStart', { gameState }, 'handleFireStart', 'Experience.tsx', 35)
-  }, [gameState])
-
-  const handleFireRelease = useCallback((targets: string[]) => {
-    tcl('fireRelease', { targets, count: targets.length }, 'handleFireRelease', 'Experience.tsx', 39)
+    isLocking.current = true
+    sendGameEvent({ type: 'FIRE_START' })
   }, [])
+
+  const handleFireRelease = useCallback(() => {
+    if (!isLocking.current) return
+
+    isLocking.current = false
+    const targets = getLockedEntityIds()
+
+    // Fire projectiles at locked targets
+    if (targets.length > 0) {
+      fireProjectiles(
+        playerPosition.x,
+        playerPosition.y,
+        playerPosition.z,
+        targets,
+        50
+      )
+    }
+
+    sendGameEvent({ type: 'FIRE_RELEASE', targetIds: targets })
+    clearAllLocks()
+    lockedTargets.current = []
+  }, [playerPosition])
+
+  const handleAimUpdate = useCallback((x: number, y: number) => {
+    aimPosition.current = { x, y }
+  }, [])
+
+  // Main ECS game loop
+  useFrame((state) => {
+    if (!isPlaying) return
+
+    const delta = state.clock.getDelta()
+    const elapsedTime = state.clock.elapsedTime
+
+    // Movement system
+    movementSystem(delta)
+
+    // Enemy spawn system
+    enemySpawnSystem(elapsedTime, playerPosition.z, {
+      spawnRate: difficultySettings.enemySpawnRate,
+      enemySpeed: difficultySettings.enemySpeed,
+      spawnDistance: 80,
+    })
+
+    // Despawn system
+    despawnSystem(playerPosition.z, 20)
+
+    // Lock-on system - only when player is holding fire
+    if (isLocking.current) {
+      lockedTargets.current = autoLockTargets(
+        playerPosition.x,
+        playerPosition.y,
+        playerPosition.z,
+        aimPosition.current.x,
+        aimPosition.current.y,
+        lockedTargets.current,
+        { maxLocks: 8, lockRange: 60, lockAngle: Math.PI / 4 }
+      )
+    }
+
+    // Projectile system with hit detection
+    projectileSystem(delta, (result) => {
+      sendGameEvent({ type: 'HIT', entityId: result.entityId, onBeat: result.onBeat })
+    })
+
+    wasLocking.current = isLocking.current
+  })
 
   return (
     <group name="experience-root">
@@ -58,19 +148,23 @@ export function Experience() {
         />
       )}
 
-      {gameState === 'playing' && (
+      {isPlaying && (
         <RailTrack onProgressUpdate={handleProgressUpdate} />
       )}
 
       <Player
-        railPosition={gameState === 'playing' ? playerPosition : undefined}
-        railQuaternion={gameState === 'playing' ? playerQuaternion : undefined}
+        railPosition={isPlaying ? playerPosition : undefined}
+        railQuaternion={isPlaying ? playerQuaternion : undefined}
         onFireStart={handleFireStart}
         onFireRelease={handleFireRelease}
+        onAimUpdate={handleAimUpdate}
       />
 
-      {gameState === 'playing' && (
-        <EnemyPool playerPosition={playerPosition} />
+      {isPlaying && (
+        <>
+          <EnemyRenderer />
+          <ProjectileRenderer />
+        </>
       )}
 
       <fog attach="fog" args={['#000000', 50, 200]} />

@@ -27,6 +27,7 @@
     "@react-three/offscreen": "^0.0.8",
     "@react-three/postprocessing": "^3.0.4",
     "@react-three/rapier": "^2.2.0",
+    "@xstate/react": "^6.0.0",
     "ecctrl": "^1.0.97",
     "howler": "^2.2.4",
     "koota": "^0.6.4",
@@ -36,6 +37,7 @@
     "react-dom": "^19.2.4",
     "react-ts-gamepads": "^1.0.8",
     "three": "^0.182.0",
+    "xstate": "^5.26.0",
     "zustand": "^5.0.10"
   },
   "devDependencies": {

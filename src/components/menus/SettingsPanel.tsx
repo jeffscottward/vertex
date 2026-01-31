@@ -1,148 +1,18 @@
-import { useSettingsStore, Difficulty, GraphicsQuality } from '../../stores/settingsStore'
-import { useMenuStore, SettingsTab } from '../../stores/menuStore'
+import { useSend, useSettingsTab, useGameState } from '../../hooks/useGameMachine'
+import { useSettingsStore } from '../../stores/settingsStore'
+import type { SettingsTab } from '../../machines/types'
 
-// Shared UI Components
-function Slider({
-  label,
-  value,
-  onChange,
-  min = 0,
-  max = 1,
-  step = 0.01,
-  displayValue,
-}: {
-  label: string
-  value: number
-  onChange: (value: number) => void
-  min?: number
-  max?: number
-  step?: number
-  displayValue?: string
-}) {
-  return (
-    <div style={{ marginBottom: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '12px', letterSpacing: '1px', opacity: 0.8 }}>{label}</span>
-        <span style={{ fontSize: '12px', color: '#00ffff' }}>
-          {displayValue ?? Math.round(value * 100) + '%'}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          width: '100%',
-          height: '4px',
-          appearance: 'none',
-          background: `linear-gradient(to right, #00ffff ${((value - min) / (max - min)) * 100}%, #333 ${((value - min) / (max - min)) * 100}%)`,
-          borderRadius: '2px',
-          cursor: 'pointer',
-        }}
-      />
-    </div>
-  )
-}
+const TABS: { id: SettingsTab; label: string }[] = [
+  { id: 'audio', label: 'AUDIO' },
+  { id: 'graphics', label: 'GRAPHICS' },
+  { id: 'controls', label: 'CONTROLS' },
+]
 
-function Toggle({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '15px',
-      }}
-    >
-      <span style={{ fontSize: '12px', letterSpacing: '1px', opacity: 0.8 }}>{label}</span>
-      <button
-        onClick={() => onChange(!checked)}
-        style={{
-          width: '50px',
-          height: '24px',
-          borderRadius: '12px',
-          background: checked ? '#00ffff' : '#333',
-          border: 'none',
-          cursor: 'pointer',
-          position: 'relative',
-          transition: 'background 0.2s ease',
-        }}
-      >
-        <div
-          style={{
-            width: '18px',
-            height: '18px',
-            borderRadius: '50%',
-            background: '#fff',
-            position: 'absolute',
-            top: '3px',
-            left: checked ? '29px' : '3px',
-            transition: 'left 0.2s ease',
-          }}
-        />
-      </button>
-    </div>
-  )
-}
+export function SettingsPanel() {
+  const send = useSend()
+  const currentTab = useSettingsTab()
+  const isPaused = useGameState((state) => state.matches('paused'))
 
-function OptionGroup<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-  color = '#00ffff',
-}: {
-  label: string
-  value: T
-  options: T[]
-  onChange: (value: T) => void
-  color?: string
-}) {
-  return (
-    <div style={{ marginBottom: '20px' }}>
-      <div style={{ fontSize: '12px', letterSpacing: '1px', marginBottom: '10px', opacity: 0.8 }}>
-        {label}
-      </div>
-      <div style={{ display: 'flex', gap: '5px' }}>
-        {options.map((opt) => (
-          <button
-            key={opt}
-            onClick={() => onChange(opt)}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              fontSize: '11px',
-              background: value === opt ? color : 'transparent',
-              border: `1px solid ${value === opt ? color : '#444'}`,
-              color: value === opt ? '#000' : '#666',
-              cursor: 'pointer',
-              fontFamily: '"Courier New", monospace',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// Tab content components
-function AudioTab() {
   const {
     masterVolume,
     musicVolume,
@@ -150,143 +20,27 @@ function AudioTab() {
     setMasterVolume,
     setMusicVolume,
     setSfxVolume,
-  } = useSettingsStore()
-
-  return (
-    <div data-component-id="settings-audio-tab">
-      <Slider label="MASTER VOLUME" value={masterVolume} onChange={setMasterVolume} />
-      <Slider label="MUSIC VOLUME" value={musicVolume} onChange={setMusicVolume} />
-      <Slider label="SFX VOLUME" value={sfxVolume} onChange={setSfxVolume} />
-    </div>
-  )
-}
-
-function GraphicsTab() {
-  const {
     graphicsQuality,
-    difficulty,
-    graphicsSettings,
     setGraphicsQuality,
-    setDifficulty,
-  } = useSettingsStore()
-
-  return (
-    <div data-component-id="settings-graphics-tab">
-      <OptionGroup<GraphicsQuality>
-        label="GRAPHICS QUALITY"
-        value={graphicsQuality}
-        options={['low', 'medium', 'high']}
-        onChange={setGraphicsQuality}
-        color="#ff00ff"
-      />
-
-      <OptionGroup<Difficulty>
-        label="DIFFICULTY"
-        value={difficulty}
-        options={['easy', 'medium', 'hard']}
-        onChange={setDifficulty}
-        color="#00ffff"
-      />
-
-      {/* Current settings display */}
-      <div
-        style={{
-          marginTop: '30px',
-          padding: '15px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '4px',
-        }}
-      >
-        <div style={{ fontSize: '10px', letterSpacing: '2px', opacity: 0.5, marginBottom: '10px' }}>
-          CURRENT SETTINGS
-        </div>
-        <div style={{ fontSize: '11px', lineHeight: '1.8', opacity: 0.7 }}>
-          <div>Bloom: {graphicsSettings.bloom ? 'ON' : 'OFF'}</div>
-          <div>Shadows: {graphicsSettings.shadows ? 'ON' : 'OFF'}</div>
-          <div>Particles: {graphicsSettings.particleCount}</div>
-          <div>Post-Processing: {graphicsSettings.postProcessing ? 'ON' : 'OFF'}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ControlsTab() {
-  const {
     mouseSensitivity,
-    gamepadDeadzone,
-    invertY,
     setMouseSensitivity,
+    gamepadDeadzone,
     setGamepadDeadzone,
+    invertY,
     setInvertY,
   } = useSettingsStore()
 
-  const { openControls } = useMenuStore()
-
-  return (
-    <div data-component-id="settings-controls-tab">
-      <Slider
-        label="MOUSE SENSITIVITY"
-        value={mouseSensitivity}
-        onChange={setMouseSensitivity}
-        min={0.1}
-        max={3}
-        step={0.1}
-        displayValue={mouseSensitivity.toFixed(1) + 'x'}
-      />
-
-      <Slider
-        label="GAMEPAD DEADZONE"
-        value={gamepadDeadzone}
-        onChange={setGamepadDeadzone}
-        min={0.05}
-        max={0.4}
-        step={0.01}
-        displayValue={Math.round(gamepadDeadzone * 100) + '%'}
-      />
-
-      <Toggle label="INVERT Y-AXIS" checked={invertY} onChange={setInvertY} />
-
-      <button
-        onClick={openControls}
-        style={{
-          width: '100%',
-          marginTop: '20px',
-          padding: '12px',
-          fontSize: '12px',
-          letterSpacing: '2px',
-          background: 'transparent',
-          border: '1px solid #666',
-          color: '#888',
-          cursor: 'pointer',
-          fontFamily: '"Courier New", monospace',
-          textTransform: 'uppercase',
-          transition: 'all 0.15s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = '#00ffff'
-          e.currentTarget.style.color = '#00ffff'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = '#666'
-          e.currentTarget.style.color = '#888'
-        }}
-      >
-        Rebind Controls
-      </button>
-    </div>
-  )
-}
-
-export function SettingsPanel() {
-  const { settingsTab, setSettingsTab, goBack } = useMenuStore()
-  const { resetToDefaults } = useSettingsStore()
-
-  const tabs: SettingsTab[] = ['audio', 'graphics', 'controls']
+  const handleClose = () => {
+    if (isPaused) {
+      send({ type: 'CLOSE_SETTINGS' })
+    } else {
+      send({ type: 'CLOSE_SETTINGS' })
+    }
+  }
 
   return (
     <div
-      data-component-id="ui-settings-panel"
+      data-component-id="settings-panel-root"
       style={{
         position: 'absolute',
         top: 0,
@@ -294,128 +48,253 @@ export function SettingsPanel() {
         width: '100%',
         height: '100%',
         background: 'rgba(0, 0, 0, 0.9)',
-        backdropFilter: 'blur(15px)',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'auto',
         fontFamily: '"Courier New", monospace',
-        color: '#fff',
-        zIndex: 100,
       }}
     >
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1
-          style={{
-            fontSize: '36px',
-            fontWeight: 'bold',
-            letterSpacing: '8px',
-            margin: 0,
-          }}
-        >
-          SETTINGS
-        </h1>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0', marginBottom: '30px' }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setSettingsTab(tab)}
-            style={{
-              padding: '10px 30px',
-              fontSize: '12px',
-              letterSpacing: '2px',
-              background: settingsTab === tab ? 'rgba(0, 255, 255, 0.1)' : 'transparent',
-              border: 'none',
-              borderBottom: settingsTab === tab ? '2px solid #00ffff' : '2px solid transparent',
-              color: settingsTab === tab ? '#00ffff' : '#666',
-              cursor: 'pointer',
-              fontFamily: '"Courier New", monospace',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
       <div
+        data-component-id="settings-panel-container"
         style={{
-          width: '350px',
-          minHeight: '250px',
+          width: '500px',
+          background: 'rgba(20, 20, 30, 0.95)',
+          border: '1px solid #333',
+          padding: '30px',
         }}
       >
-        {settingsTab === 'audio' && <AudioTab />}
-        {settingsTab === 'graphics' && <GraphicsTab />}
-        {settingsTab === 'controls' && <ControlsTab />}
-      </div>
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '30px',
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: '24px',
+              letterSpacing: '5px',
+              color: '#00ffff',
+            }}
+          >
+            SETTINGS
+          </h2>
+          <button
+            data-component-id="settings-panel-close"
+            onClick={handleClose}
+            style={{
+              background: 'transparent',
+              border: '1px solid #666',
+              color: '#666',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontFamily: '"Courier New", monospace',
+              fontSize: '12px',
+            }}
+          >
+            CLOSE
+          </button>
+        </div>
 
-      {/* Footer Buttons */}
+        {/* Tabs */}
+        <div
+          data-component-id="settings-panel-tabs"
+          style={{
+            display: 'flex',
+            gap: '10px',
+            marginBottom: '30px',
+          }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => send({ type: 'SET_TAB', tab: tab.id })}
+              style={{
+                flex: 1,
+                padding: '10px',
+                fontSize: '12px',
+                letterSpacing: '2px',
+                background: currentTab === tab.id ? '#00ffff' : 'transparent',
+                border: `1px solid ${currentTab === tab.id ? '#00ffff' : '#444'}`,
+                color: currentTab === tab.id ? '#000' : '#666',
+                cursor: 'pointer',
+                fontFamily: '"Courier New", monospace',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div data-component-id="settings-panel-content" style={{ minHeight: '250px' }}>
+          {currentTab === 'audio' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+              <SliderSetting
+                label="MASTER VOLUME"
+                value={masterVolume}
+                onChange={setMasterVolume}
+              />
+              <SliderSetting
+                label="MUSIC VOLUME"
+                value={musicVolume}
+                onChange={setMusicVolume}
+              />
+              <SliderSetting
+                label="SFX VOLUME"
+                value={sfxVolume}
+                onChange={setSfxVolume}
+              />
+            </div>
+          )}
+
+          {currentTab === 'graphics' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+              <div>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: '#666',
+                    marginBottom: '10px',
+                    letterSpacing: '2px',
+                  }}
+                >
+                  QUALITY PRESET
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {(['low', 'medium', 'high'] as const).map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => setGraphicsQuality(q)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        fontSize: '12px',
+                        background: graphicsQuality === q ? '#ff00ff' : 'transparent',
+                        border: `1px solid ${graphicsQuality === q ? '#ff00ff' : '#444'}`,
+                        color: graphicsQuality === q ? '#000' : '#666',
+                        cursor: 'pointer',
+                        fontFamily: '"Courier New", monospace',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ fontSize: '11px', color: '#444', lineHeight: 1.8 }}>
+                LOW: 60fps on older hardware
+                <br />
+                MEDIUM: Balanced quality and performance
+                <br />
+                HIGH: Full visual effects (bloom, shadows)
+              </div>
+            </div>
+          )}
+
+          {currentTab === 'controls' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+              <SliderSetting
+                label="MOUSE SENSITIVITY"
+                value={mouseSensitivity}
+                min={0.1}
+                max={2}
+                onChange={setMouseSensitivity}
+              />
+              <SliderSetting
+                label="GAMEPAD DEADZONE"
+                value={gamepadDeadzone}
+                min={0.05}
+                max={0.5}
+                onChange={setGamepadDeadzone}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span style={{ fontSize: '12px', color: '#666', letterSpacing: '2px' }}>
+                  INVERT Y AXIS
+                </span>
+                <button
+                  onClick={() => setInvertY(!invertY)}
+                  style={{
+                    padding: '8px 20px',
+                    fontSize: '12px',
+                    background: invertY ? '#ff00ff' : 'transparent',
+                    border: `1px solid ${invertY ? '#ff00ff' : '#444'}`,
+                    color: invertY ? '#000' : '#666',
+                    cursor: 'pointer',
+                    fontFamily: '"Courier New", monospace',
+                  }}
+                >
+                  {invertY ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Slider component for volume/sensitivity settings
+function SliderSetting({
+  label,
+  value,
+  min = 0,
+  max = 1,
+  onChange,
+}: {
+  label: string
+  value: number
+  min?: number
+  max?: number
+  onChange: (value: number) => void
+}) {
+  const percentage = ((value - min) / (max - min)) * 100
+
+  return (
+    <div>
       <div
         style={{
           display: 'flex',
-          gap: '15px',
-          marginTop: '40px',
+          justifyContent: 'space-between',
+          marginBottom: '8px',
         }}
       >
-        <button
-          onClick={resetToDefaults}
-          style={{
-            padding: '10px 25px',
-            fontSize: '12px',
-            letterSpacing: '1px',
-            background: 'transparent',
-            border: '1px solid #666',
-            color: '#888',
-            cursor: 'pointer',
-            fontFamily: '"Courier New", monospace',
-            textTransform: 'uppercase',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#ff4444'
-            e.currentTarget.style.color = '#ff4444'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = '#666'
-            e.currentTarget.style.color = '#888'
-          }}
-        >
-          Reset Defaults
-        </button>
-
-        <button
-          onClick={goBack}
-          style={{
-            padding: '10px 40px',
-            fontSize: '12px',
-            letterSpacing: '2px',
-            background: 'transparent',
-            border: '1px solid #00ffff',
-            color: '#00ffff',
-            cursor: 'pointer',
-            fontFamily: '"Courier New", monospace',
-            textTransform: 'uppercase',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#00ffff'
-            e.currentTarget.style.color = '#000'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = '#00ffff'
-          }}
-        >
-          Back
-        </button>
+        <span style={{ fontSize: '12px', color: '#666', letterSpacing: '2px' }}>
+          {label}
+        </span>
+        <span style={{ fontSize: '12px', color: '#00ffff' }}>
+          {Math.round(percentage)}%
+        </span>
       </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={0.01}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        style={{
+          width: '100%',
+          height: '6px',
+          background: `linear-gradient(to right, #00ffff ${percentage}%, #333 ${percentage}%)`,
+          outline: 'none',
+          cursor: 'pointer',
+          WebkitAppearance: 'none',
+          appearance: 'none',
+        }}
+      />
     </div>
   )
 }
