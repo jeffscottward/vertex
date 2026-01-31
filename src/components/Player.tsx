@@ -5,7 +5,6 @@ import { useControls } from 'leva'
 import { useGameStore } from '../stores/gameStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useInput } from '../hooks/useInput'
-import { COMPONENT_IDS } from '../constants/componentIds'
 import { tcl } from '../utils/debug'
 
 interface PlayerProps {
@@ -129,26 +128,26 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
   })
 
   return (
-    <group ref={groupRef} name={COMPONENT_IDS.PLAYER_ROOT}>
-      <mesh ref={meshRef} name={COMPONENT_IDS.PLAYER_MESH}>
+    <group ref={groupRef} name="player-root">
+      <mesh ref={meshRef} name="player-mesh">
         <icosahedronGeometry args={[0.5, 0]} />
         <meshBasicMaterial color={playerColor} wireframe />
       </mesh>
 
-      <mesh name={COMPONENT_IDS.PLAYER_GLOW} scale={0.35}>
+      <mesh name="player-glow" scale={0.35}>
         <icosahedronGeometry args={[1, 1]} />
         <meshBasicMaterial color={playerColor} transparent opacity={0.3} />
       </mesh>
 
       <pointLight color={playerColor} intensity={2} distance={5} />
 
-      <mesh name={COMPONENT_IDS.PLAYER_SHELL} scale={0.7} rotation={[0.5, 0.5, 0]}>
+      <mesh name="player-shell" scale={0.7} rotation={[0.5, 0.5, 0]}>
         <icosahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color={playerColor} wireframe transparent opacity={0.3} />
       </mesh>
 
       {isLocking.current && (
-        <group name={COMPONENT_IDS.PLAYER_LOCK_INDICATORS}>
+        <group name="player-lock-indicators">
           {Array.from({ length: 8 }, (_, i) => {
             const angle = (i / 8) * Math.PI * 2 + performance.now() * 0.003
             return (

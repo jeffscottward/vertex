@@ -1,7 +1,5 @@
 import { useGameStore } from '../stores/gameStore'
 import { useSettingsStore } from '../stores/settingsStore'
-import { COMPONENT_IDS } from '../constants/componentIds'
-import { dataId } from '../utils/componentId'
 
 export function UI() {
   const { score, multiplier, overdrive, gameState, setGameState } = useGameStore()
@@ -15,7 +13,7 @@ export function UI() {
 
   return (
     <div
-      {...dataId(COMPONENT_IDS.UI_ROOT)}
+      data-component-id="ui-root"
       style={{
         position: 'absolute',
         top: 0,
@@ -29,7 +27,7 @@ export function UI() {
     >
       {/* Score */}
       <div
-        {...dataId(COMPONENT_IDS.UI_SCORE)}
+        data-component-id="ui-score"
         style={{
           position: 'absolute',
           top: '20px',
@@ -53,7 +51,7 @@ export function UI() {
       {/* Multiplier */}
       {gameState === 'playing' && (
         <div
-          {...dataId(COMPONENT_IDS.UI_MULTIPLIER)}
+          data-component-id="ui-multiplier"
           style={{
             position: 'absolute',
             top: '20px',
@@ -77,7 +75,7 @@ export function UI() {
       {/* Overdrive Bar */}
       {gameState === 'playing' && (
         <div
-          {...dataId(COMPONENT_IDS.UI_OVERDRIVE)}
+          data-component-id="ui-overdrive"
           style={{
             position: 'absolute',
             bottom: '30px',
@@ -110,7 +108,7 @@ export function UI() {
           </div>
 
           {/* Lock indicators */}
-          <div {...dataId(COMPONENT_IDS.UI_LOCK_INDICATORS)} style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '15px' }}>
+          <div data-component-id="ui-lock-indicators" style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '15px' }}>
             {Array.from({ length: 8 }, (_, i) => (
               <div key={i} style={{
                 width: '12px',
@@ -127,7 +125,7 @@ export function UI() {
       {/* Title Screen */}
       {gameState === 'title' && (
         <div
-          {...dataId(COMPONENT_IDS.UI_TITLE_SCREEN)}
+          data-component-id="ui-title-screen"
           style={{
             position: 'absolute',
             top: '50%',
@@ -205,7 +203,7 @@ export function UI() {
           </div>
 
           <button
-            {...dataId(COMPONENT_IDS.UI_START_BUTTON)}
+            data-component-id="ui-start-button"
             onClick={handleStartClick}
             style={{
               marginTop: '40px',
@@ -233,7 +231,7 @@ export function UI() {
             START
           </button>
 
-          <div {...dataId(COMPONENT_IDS.UI_CONTROLS_HELP)} style={{ fontSize: '11px', opacity: 0.5, marginTop: '30px', lineHeight: '1.8' }}>
+          <div data-component-id="ui-controls-help" style={{ fontSize: '11px', opacity: 0.5, marginTop: '30px', lineHeight: '1.8' }}>
             <div style={{ marginBottom: '10px' }}>
               <span style={{ color: '#00ffff' }}>KEYBOARD/MOUSE</span>
               <br />

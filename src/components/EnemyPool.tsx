@@ -5,7 +5,6 @@ import * as THREE from 'three'
 import { useControls } from 'leva'
 import { useGameStore } from '../stores/gameStore'
 import { useSettingsStore } from '../stores/settingsStore'
-import { COMPONENT_IDS } from '../constants/componentIds'
 
 export interface Enemy {
   id: string
@@ -132,8 +131,8 @@ export function EnemyPool({ playerPosition, onUnregisterTarget }: EnemyPoolProps
   const fastEnemies = activeEnemies.filter(e => e.type === 'fast')
 
   return (
-    <group name={COMPONENT_IDS.ENEMY_POOL_ROOT}>
-      <Instances name={COMPONENT_IDS.ENEMY_BASIC_INSTANCES} limit={POOL_SIZE}>
+    <group name="enemy-pool-root">
+      <Instances name="enemy-basic-instances" limit={POOL_SIZE}>
         <tetrahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color={ENEMY_CONFIGS.basic.color} wireframe />
         {basicEnemies.map((enemy) => (
@@ -141,7 +140,7 @@ export function EnemyPool({ playerPosition, onUnregisterTarget }: EnemyPoolProps
         ))}
       </Instances>
 
-      <Instances name={COMPONENT_IDS.ENEMY_ARMORED_INSTANCES} limit={POOL_SIZE}>
+      <Instances name="enemy-armored-instances" limit={POOL_SIZE}>
         <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color={ENEMY_CONFIGS.armored.color} wireframe />
         {armoredEnemies.map((enemy) => (
@@ -149,7 +148,7 @@ export function EnemyPool({ playerPosition, onUnregisterTarget }: EnemyPoolProps
         ))}
       </Instances>
 
-      <Instances name={COMPONENT_IDS.ENEMY_FAST_INSTANCES} limit={POOL_SIZE}>
+      <Instances name="enemy-fast-instances" limit={POOL_SIZE}>
         <dodecahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color={ENEMY_CONFIGS.fast.color} wireframe />
         {fastEnemies.map((enemy) => (

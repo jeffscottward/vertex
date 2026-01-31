@@ -4,7 +4,6 @@ import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 import { useControls } from 'leva'
 import { useRailTrack, LEVEL_1_TRACK } from '../hooks/useRailTrack'
-import { COMPONENT_IDS } from '../constants/componentIds'
 
 interface RailTrackProps {
   onProgressUpdate?: (progress: number, position: THREE.Vector3, quaternion: THREE.Quaternion) => void
@@ -105,10 +104,10 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
   })
 
   return (
-    <group ref={trackGroupRef} name={COMPONENT_IDS.RAIL_TRACK_ROOT}>
+    <group ref={trackGroupRef} name="rail-track-root">
       {showTrackPath && (
         <Line
-          name={COMPONENT_IDS.RAIL_TRACK_PATH}
+          name="rail-track-path"
           points={trackPoints}
           color={trackColor}
           lineWidth={2}
@@ -117,7 +116,7 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
         />
       )}
 
-      <group name={COMPONENT_IDS.RAIL_TRACK_TUNNEL}>
+      <group name="rail-track-tunnel">
         {tunnelLines.map((points, i) => (
           <Line
             key={`tunnel-${i}`}

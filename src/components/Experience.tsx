@@ -8,7 +8,6 @@ import { EnemyPool } from './EnemyPool'
 import { PostFX } from './PostFX'
 import { useGameStore } from '../stores/gameStore'
 import { useSettingsStore } from '../stores/settingsStore'
-import { COMPONENT_IDS } from '../constants/componentIds'
 import { tcl } from '../utils/debug'
 
 export function Experience() {
@@ -41,7 +40,7 @@ export function Experience() {
   }, [])
 
   return (
-    <group name={COMPONENT_IDS.EXPERIENCE_ROOT}>
+    <group name="experience-root">
       {showOrbitControls && <OrbitControls makeDefault />}
 
       <ambientLight intensity={0.1} />
