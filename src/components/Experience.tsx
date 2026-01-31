@@ -85,6 +85,7 @@ export function Experience() {
   }, [])
 
   const handleFireStart = useCallback(() => {
+    console.log('🔫 ~ Experience → Fire START (locking)')
     isLocking.current = true
     sendGameEvent({ type: 'FIRE_START' })
   }, [])
@@ -95,6 +96,8 @@ export function Experience() {
     isLocking.current = false
     const targets = getLockedEntityIds()
 
+    console.log(`🔫 ~ Experience → Fire RELEASE with ${targets.length} targets locked`)
+
     // Fire projectiles at locked targets
     if (targets.length > 0) {
       fireProjectiles(
@@ -104,6 +107,8 @@ export function Experience() {
         targets,
         50
       )
+    } else {
+      console.log('🔫 ~ Experience → No targets locked!')
     }
 
     sendGameEvent({ type: 'FIRE_RELEASE', targetIds: targets })
@@ -116,10 +121,9 @@ export function Experience() {
   }, [])
 
   // Main ECS game loop
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!isPlaying) return
 
-    const delta = state.clock.getDelta()
     const elapsedTime = state.clock.elapsedTime
 
     // Reset spawn timer with current time when game starts

@@ -7,17 +7,17 @@ let poolInitialized = false
 let powerUpPool: ReturnType<typeof world.spawn>[] = []
 
 // Power-up spawn configuration
-const SPAWN_INTERVAL_MIN = 30 // seconds
-const SPAWN_INTERVAL_MAX = 60 // seconds
-const MAGNET_RANGE = 5 // units
-const MAGNET_SPEED = 15 // units per second
-const COLLECTION_RANGE = 1.5 // units
+const SPAWN_INTERVAL_MIN = 15 // seconds (faster for testing)
+const SPAWN_INTERVAL_MAX = 30 // seconds
+const MAGNET_RANGE = 8 // units (larger magnet range)
+const MAGNET_SPEED = 20 // units per second
+const COLLECTION_RANGE = 3.0 // units (larger collection range)
 
-// Power-up visual configuration
+// Power-up visual configuration (REZ-style: blue=overdrive, red=evolution/shield)
 export const POWERUP_CONFIGS = {
-  shield: { color: '#00aaff', scale: 0.6, label: 'SHIELD' },
-  overdrive: { color: '#ff00ff', scale: 0.6, label: 'OVERDRIVE' },
-  multilock: { color: '#ffff00', scale: 0.6, label: 'MULTI-LOCK' },
+  shield: { color: '#00ffff', scale: 0.8, label: 'SHIELD', description: 'A - Activate' },
+  overdrive: { color: '#ff00ff', scale: 0.8, label: 'OVERDRIVE', description: 'S - Activate' },
+  multilock: { color: '#ffff00', scale: 0.8, label: 'MULTI-LOCK', description: '16 Targets' },
 }
 
 // Spawn state
@@ -139,7 +139,10 @@ export function powerUpSystem(
       type = 'multilock'
     }
 
-    spawnPowerUp(spawnX, spawnY, spawnZ, type)
+    const spawned = spawnPowerUp(spawnX, spawnY, spawnZ, type)
+    if (spawned) {
+      console.log(`⭐ ~ powerUpSystem → Spawned ${type} at [${spawnX.toFixed(1)}, ${spawnY.toFixed(1)}, ${spawnZ.toFixed(1)}]`)
+    }
   }
 
   // Update active power-ups
@@ -159,6 +162,7 @@ export function powerUpSystem(
     // Check for collection
     if (dist < COLLECTION_RANGE) {
       // Collected!
+      console.log(`⭐ ~ powerUpSystem → Collected ${powerUp.type}! Distance was ${dist.toFixed(2)}`)
       switch (powerUp.type) {
         case 'shield':
           callbacks.onCollectShield()

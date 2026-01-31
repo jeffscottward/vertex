@@ -1,10 +1,10 @@
 import { activateEnemy } from '../world'
 
-// Enemy configuration
+// Enemy configuration (colors match EnemyRenderer)
 const ENEMY_CONFIGS = {
-  basic: { speed: 8, color: '#ff0044', scale: 0.5 },
-  armored: { speed: 5, color: '#ffaa00', scale: 0.8 },
-  fast: { speed: 15, color: '#00ffaa', scale: 0.3 },
+  basic: { speed: 8, color: '#ff00ff', scale: 0.6 },
+  armored: { speed: 5, color: '#ff66ff', scale: 0.9 },
+  fast: { speed: 15, color: '#cc00ff', scale: 0.4 },
 }
 
 interface SpawnConfig {

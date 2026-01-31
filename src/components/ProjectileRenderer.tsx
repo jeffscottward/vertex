@@ -3,12 +3,11 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { world, Position, Projectile, Active } from '../ecs'
 
-// Shared geometry and material for projectiles
-const projectileGeometry = new THREE.SphereGeometry(0.15, 8, 8)
+// Shared geometry and material for projectiles - more visible
+const projectileGeometry = new THREE.SphereGeometry(0.25, 8, 8)
 const projectileMaterial = new THREE.MeshBasicMaterial({
   color: '#00ffff',
-  transparent: true,
-  opacity: 0.9,
+  transparent: false,
 })
 
 const POOL_SIZE = 50
@@ -36,8 +35,8 @@ export function ProjectileRenderer() {
       // Update matrix
       tempObject.position.set(pos.x, pos.y, pos.z)
 
-      // Scale based on progress (shrink as it travels)
-      const scale = 1 - proj.progress * 0.5
+      // Scale based on progress - larger at start, smaller at end
+      const scale = 1.5 - proj.progress * 0.8
       tempObject.scale.setScalar(scale)
       tempObject.updateMatrix()
 

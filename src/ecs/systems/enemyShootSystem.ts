@@ -62,6 +62,9 @@ function fireEnemyProjectile(
   return null
 }
 
+// Debug: track enemy shooting attempts
+let lastEnemyShootLogTime = 0
+
 /**
  * Enemy shooting system - makes enemies shoot at the player
  */
@@ -73,8 +76,12 @@ export function enemyShootSystem(
 
   const { playerX, playerY, playerZ, shootRange, projectileSpeed } = config
 
+  let shootersFound = 0
+  let shotsFired = 0
+
   // Process enemies that can shoot
   for (const entity of world.query(Position, Enemy, Active, CanShoot)) {
+    shootersFound++
     const pos = entity.get(Position)
     const shooter = entity.get(CanShoot)
 
@@ -86,8 +93,9 @@ export function enemyShootSystem(
     const dz = playerZ - pos.z
     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
 
-    // Only shoot if in range and behind the player (enemy is ahead)
-    if (dist > shootRange || pos.z > playerZ) continue
+    // Only shoot if in range and in front of player (enemy Z < player Z)
+    if (dist > shootRange) continue
+    if (pos.z > playerZ) continue // Enemy is behind player
 
     // Check cooldown
     if (elapsedTime - shooter.lastShotTime < shooter.shotCooldown) continue
@@ -104,11 +112,24 @@ export function enemyShootSystem(
     const targetY = playerY + (Math.random() - 0.5) * 2
     const targetZ = playerZ + leadFactor
 
-    fireEnemyProjectile(
+    const projectile = fireEnemyProjectile(
       pos.x, pos.y, pos.z,
       targetX, targetY, targetZ,
       projectileSpeed
     )
+
+    if (projectile) {
+      shotsFired++
+      console.log(`👾 ~ enemyShootSystem → Enemy fired! From [${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}]`)
+    }
+  }
+
+  // Log periodically (every 2 seconds)
+  if (elapsedTime - lastEnemyShootLogTime > 2) {
+    lastEnemyShootLogTime = elapsedTime
+    if (shootersFound > 0) {
+      console.log(`👾 ~ enemyShootSystem → ${shootersFound} shooters active, ${shotsFired} shots this cycle`)
+    }
   }
 }
 

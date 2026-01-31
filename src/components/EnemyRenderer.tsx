@@ -4,11 +4,11 @@ import * as THREE from 'three'
 import { world, Position, Enemy, Active, Lockable } from '../ecs'
 import { useSettingsStore } from '../stores/settingsStore'
 
-// Enemy visual configurations
+// Enemy visual configurations (REZ-style: pink/magenta spiky shapes)
 const ENEMY_CONFIGS = {
-  basic: { color: '#ff0044', scale: 0.5 },
-  armored: { color: '#ffaa00', scale: 0.8 },
-  fast: { color: '#00ffaa', scale: 0.3 },
+  basic: { color: '#ff00ff', scale: 0.6 },    // Bright magenta
+  armored: { color: '#ff66ff', scale: 0.9 },  // Light pink
+  fast: { color: '#cc00ff', scale: 0.4 },     // Purple-magenta
 }
 
 // Shared geometries
@@ -16,7 +16,7 @@ const basicGeometry = new THREE.TetrahedronGeometry(1, 0)
 const armoredGeometry = new THREE.OctahedronGeometry(1, 0)
 const fastGeometry = new THREE.DodecahedronGeometry(1, 0)
 
-// Shared materials
+// Shared materials - more emissive for bloom effect
 const basicMaterial = new THREE.MeshBasicMaterial({
   color: ENEMY_CONFIGS.basic.color,
   wireframe: true,
@@ -30,12 +30,12 @@ const fastMaterial = new THREE.MeshBasicMaterial({
   wireframe: true,
 })
 
-// Lock indicator material
+// Lock indicator material - bright cyan for contrast
 const lockMaterial = new THREE.MeshBasicMaterial({
-  color: '#ff00ff',
+  color: '#00ffff',
   wireframe: true,
   transparent: true,
-  opacity: 0.8,
+  opacity: 0.9,
 })
 
 const POOL_SIZE = 100

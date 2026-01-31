@@ -88,9 +88,9 @@ export const GRAPHICS_PRESETS: Record<GraphicsQuality, GraphicsSettings> = {
     dpr: [1, 2],
     shadows: true,
     bloom: true,
-    bloomIntensity: 1.5,
+    bloomIntensity: 2.5,  // More intense glow for REZ aesthetic
     chromaticAberration: true,
-    chromaticOffset: 0.002,
+    chromaticOffset: 0.003,
     particleCount: 500,
     enemyLights: 10,
     starCount: 5000,

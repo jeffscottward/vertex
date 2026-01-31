@@ -15,8 +15,9 @@ export function PostFX() {
       <EffectComposer>
         <Bloom
           intensity={graphicsSettings.bloom ? graphicsSettings.bloomIntensity : 0}
-          luminanceThreshold={0.2}
-          luminanceSmoothing={0.9}
+          luminanceThreshold={0.1}  // Lower threshold for more glow
+          luminanceSmoothing={0.95}
+          mipmapBlur
         />
         <ChromaticAberration
           blendFunction={BlendFunction.NORMAL}
@@ -30,8 +31,9 @@ export function PostFX() {
     <EffectComposer>
       <Bloom
         intensity={graphicsSettings.bloom ? graphicsSettings.bloomIntensity : 0}
-        luminanceThreshold={0.2}
-        luminanceSmoothing={0.9}
+        luminanceThreshold={0.1}  // Lower threshold for more glow
+        luminanceSmoothing={0.95}
+        mipmapBlur
       />
     </EffectComposer>
   )

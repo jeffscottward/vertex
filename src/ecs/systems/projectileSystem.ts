@@ -2,11 +2,11 @@ import { world, deactivateProjectile, deactivateEnemy, activateProjectile } from
 import { Position, Projectile, Active, Enemy } from '../traits'
 import { spawnExplosion } from './explosionSystem'
 
-// Enemy colors for explosions
+// Enemy colors for explosions (match EnemyRenderer)
 const ENEMY_COLORS = {
-  basic: '#ff0044',
-  armored: '#ffaa00',
-  fast: '#00ffaa',
+  basic: '#ff00ff',   // Bright magenta
+  armored: '#ff66ff', // Light pink
+  fast: '#cc00ff',    // Purple-magenta
 }
 
 interface HitResult {
@@ -82,6 +82,7 @@ export function projectileSystem(
 
             // Destroy enemy if health depleted
             if (newHealth <= 0) {
+              console.log(`💥 ~ projectileSystem → Enemy ${proj.targetEntityId} destroyed!`)
               // Spawn explosion at enemy position
               const enemyPos = targetEntity.get(Position)
               if (enemyPos) {
@@ -91,6 +92,8 @@ export function projectileSystem(
 
               deactivateEnemy(targetEntity)
               unregisterEntity(proj.targetEntityId)
+            } else {
+              console.log(`🎯 ~ projectileSystem → Hit enemy ${proj.targetEntityId}, health: ${newHealth}`)
             }
           }
         }
@@ -114,12 +117,22 @@ export function fireProjectiles(
   lockedEntityIds: number[],
   projectileSpeed = 50
 ) {
+  console.log(`🚀 ~ fireProjectiles → Firing at ${lockedEntityIds.length} targets from [${playerX.toFixed(1)}, ${playerY.toFixed(1)}, ${playerZ.toFixed(1)}]`)
+
   for (const targetId of lockedEntityIds) {
     const targetEntity = getEntityById(targetId)
-    if (!targetEntity || !targetEntity.has(Active)) continue
+    if (!targetEntity || !targetEntity.has(Active)) {
+      console.log(`🚀 ~ fireProjectiles → Target ${targetId} not found or inactive`)
+      continue
+    }
 
     const targetPos = targetEntity.get(Position)
-    if (!targetPos) continue
+    if (!targetPos) {
+      console.log(`🚀 ~ fireProjectiles → Target ${targetId} has no position`)
+      continue
+    }
+
+    console.log(`🚀 ~ fireProjectiles → Launching projectile to [${targetPos.x.toFixed(1)}, ${targetPos.y.toFixed(1)}, ${targetPos.z.toFixed(1)}]`)
 
     activateProjectile(
       playerX,
