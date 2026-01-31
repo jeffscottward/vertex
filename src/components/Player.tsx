@@ -2,19 +2,19 @@ import { useRef, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useControls } from 'leva'
-import { useGameStore } from '../stores/gameStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useInput } from '../hooks/useInput'
-import { tcl } from '../utils/debug'
+import { useIsPlaying, useIsTitle, sendGameEvent } from '../hooks/useGameMachine'
 
 interface PlayerProps {
   railPosition?: THREE.Vector3
   railQuaternion?: THREE.Quaternion
   onFireStart?: () => void
-  onFireRelease?: (lockedTargets: string[]) => void
+  onFireRelease?: () => void
+  onAimUpdate?: (x: number, y: number) => void
 }
 
-export function Player({ railPosition, railQuaternion, onFireStart, onFireRelease }: PlayerProps) {
+export function Player({ railPosition, railQuaternion, onFireStart, onFireRelease, onAimUpdate }: PlayerProps) {
   const meshRef = useRef<THREE.Mesh>(null!)
   const groupRef = useRef<THREE.Group>(null!)
   const currentOffset = useRef(new THREE.Vector2(0, 0))
@@ -24,6 +24,8 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
   const { getInput } = useInput()
 
   const difficultySettings = useSettingsStore((state) => state.difficultySettings)
+  const isPlaying = useIsPlaying()
+  const isTitle = useIsTitle()
 
   const { playerColor, moveRange, cameraFollow, cameraDistance } = useControls('Player', {
     playerColor: '#00ffff',
@@ -32,51 +34,66 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
     cameraDistance: { value: 12, min: 5, max: 25, step: 1 },
   })
 
-  const gameState = useGameStore((state) => state.gameState)
-  const setGameState = useGameStore((state) => state.setGameState)
-
+  // Handle click to start from title
   useEffect(() => {
     const handleClick = () => {
-      if (gameState === 'title') {
-        tcl('gameStart', { from: 'click' }, 'handleClick', 'Player.tsx', 41)
-        setGameState('playing')
+      if (isTitle) {
+        sendGameEvent({ type: 'START' })
       }
     }
 
     window.addEventListener('click', handleClick)
     return () => window.removeEventListener('click', handleClick)
-  }, [gameState, setGameState])
+  }, [isTitle])
+
+  // Handle ESC to pause
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isPlaying) {
+        sendGameEvent({ type: 'PAUSE' })
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isPlaying])
 
   useFrame((_, delta) => {
     if (!meshRef.current || !groupRef.current) return
 
     const input = getInput()
 
-    if (gameState === 'title') {
+    // Handle title screen - start game on fire input
+    if (isTitle) {
       if (input.fire || input.firePressed) {
-        tcl('gameStart', { from: 'gamepad', inputSource: input.inputSource }, 'useFrame', 'Player.tsx', 54)
-        setGameState('playing')
+        sendGameEvent({ type: 'START' })
       }
       return
     }
 
-    if (gameState !== 'playing') return
+    // Only process gameplay when playing
+    if (!isPlaying) return
 
+    // Fire start detection
     if (input.firePressed && !isLocking.current) {
       isLocking.current = true
-      tcl('lockStart', {}, 'useFrame', 'Player.tsx', 64)
       onFireStart?.()
     }
 
+    // Fire release detection
     if (input.fireReleased && isLocking.current) {
       isLocking.current = false
-      tcl('lockRelease', {}, 'useFrame', 'Player.tsx', 70)
-      onFireRelease?.([])
+      onFireRelease?.()
     }
 
+    // Update aim position for lock-on system
+    onAimUpdate?.(input.aimX, input.aimY)
+
+    // Calculate target position from input
     const targetX = input.moveX * moveRange
     const targetY = input.moveY * moveRange * 0.6 + 2
 
+    // Smooth movement with damping
     currentOffset.current.x = THREE.MathUtils.damp(
       currentOffset.current.x,
       targetX,
@@ -90,6 +107,7 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
       delta
     )
 
+    // Apply position relative to rail
     if (railPosition && railQuaternion) {
       groupRef.current.position.copy(railPosition)
 
@@ -99,6 +117,7 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
       groupRef.current.position.addScaledVector(right, currentOffset.current.x)
       groupRef.current.position.addScaledVector(up, currentOffset.current.y)
 
+      // Camera follow
       if (cameraFollow) {
         const cameraOffset = new THREE.Vector3(0, 3, cameraDistance).applyQuaternion(railQuaternion)
         const targetCamPos = groupRef.current.position.clone().add(cameraOffset)
@@ -111,19 +130,32 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
       groupRef.current.position.y = currentOffset.current.y
     }
 
+    // Mesh rotation animation
     meshRef.current.rotation.x += delta * 0.5
     meshRef.current.rotation.y += delta * 0.8
 
+    // Tilt based on velocity
     const velocityX = targetX - currentOffset.current.x
     const velocityY = targetY - currentOffset.current.y
     groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, velocityY * 0.1, delta * 5)
     groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -velocityX * 0.1, delta * 5)
 
+    // Pulse effect when locking
     if (isLocking.current) {
       const pulse = Math.sin(performance.now() * 0.01) * 0.1 + 1
       meshRef.current.scale.setScalar(pulse)
     } else {
       meshRef.current.scale.setScalar(1)
+    }
+
+    // Check for overdrive activation (E key or Y button)
+    if (input.overdrive) {
+      sendGameEvent({ type: 'ACTIVATE_OVERDRIVE' })
+    }
+
+    // Check for pause (Start button on gamepad)
+    if (input.pause) {
+      sendGameEvent({ type: 'PAUSE' })
     }
   })
 
@@ -146,6 +178,7 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
         <meshBasicMaterial color={playerColor} wireframe transparent opacity={0.3} />
       </mesh>
 
+      {/* Lock indicator particles */}
       {isLocking.current && (
         <group name="player-lock-indicators">
           {Array.from({ length: 8 }, (_, i) => {
