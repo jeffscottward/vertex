@@ -68,8 +68,28 @@ GACP, when you get the chance, because we're doing a lot right now.
 
 ---
 
-### Prompt 13 - Menu System & Prompt Archive (Current)
+### Prompt 13 - Menu System & Prompt Archive
 Something else I just thought of is if we haven't done already, maybe you have done it and I just haven't looked at the file system yet myself manually. But obviously if we're building a 3D game, we should have a start menu system and of course the settings and control layout configuration. You know, all the basics. Before we do that though, can you actually output a markdown of all of my inputs that I've given you called "user prompts" with today's date and time so that I can track everything that I've been giving you before the context does the auto-compact? Save that to our docs folder.
+
+---
+
+### Prompt 14 - Implement Menu System
+Want me to implement the full menu system now? I can create: A proper menu state machine, Pause overlay, Settings panel with all options, Control rebinding interface. Yes, lets do that after you have gacp.
+
+---
+
+### Prompt 15 - Commit & Proceed
+Commit the documentation file and then proceed to implementing the menu system.
+
+---
+
+### Prompt 16 - Prompt Tracking Request
+Check the time after every prompt that we do, and if it's over one minute, I want you to update the user prompts file with any prompts that are missing. I want to keep a running log of all the prompts that I've input so far.
+
+---
+
+### Prompt 17 - GACP Checkpoint
+GACP when you get the chance!
 
 ---
 
@@ -91,6 +111,8 @@ Something else I just thought of is if we haven't done already, maybe you have d
 - [x] Graphics quality presets (low/medium/high)
 - [x] CLAUDE.md with project rules
 - [x] Docs folder with @docs/ references
-- [ ] Full start menu system
-- [ ] Settings menu (in-game)
-- [ ] Control layout/rebinding configuration
+- [x] Full menu state machine (menuStore.ts)
+- [x] Pause overlay with resume/settings/quit
+- [x] Settings panel (audio/graphics/controls tabs)
+- [x] Control rebinding interface with keyboard support
+- [x] Game over & level complete screens
