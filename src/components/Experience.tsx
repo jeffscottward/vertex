@@ -1,39 +1,81 @@
-import { OrbitControls, Grid } from '@react-three/drei'
+import { useState, useCallback } from 'react'
+import { OrbitControls, Stars } from '@react-three/drei'
 import { useControls } from 'leva'
+import * as THREE from 'three'
 import { Player } from './Player'
-import { Track } from './Track'
+import { RailTrack } from './RailTrack'
+import { EnemyPool } from './EnemyPool'
 import { PostFX } from './PostFX'
+import { useGameStore } from '../stores/gameStore'
 
 export function Experience() {
-  const { showGrid, showOrbitControls } = useControls('Debug', {
-    showGrid: true,
-    showOrbitControls: true,
+  const { showOrbitControls, showStars } = useControls('Debug', {
+    showOrbitControls: false,
+    showStars: true,
   })
+
+  const [playerPosition, setPlayerPosition] = useState(new THREE.Vector3(0, 2, 0))
+  const [playerQuaternion, setPlayerQuaternion] = useState(new THREE.Quaternion())
+
+  const gameState = useGameStore((state) => state.gameState)
+
+  // Handle rail track progress updates
+  const handleProgressUpdate = useCallback((
+    _progress: number,
+    position: THREE.Vector3,
+    quaternion: THREE.Quaternion
+  ) => {
+    setPlayerPosition(position.clone())
+    setPlayerQuaternion(quaternion.clone())
+  }, [])
 
   return (
     <>
       {showOrbitControls && <OrbitControls makeDefault />}
 
-      <ambientLight intensity={0.2} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
+      {/* Ambient lighting */}
+      <ambientLight intensity={0.1} />
 
-      <Track />
-      <Player />
+      {/* Directional light */}
+      <directionalLight
+        position={[10, 20, 10]}
+        intensity={0.5}
+        color="#ffffff"
+      />
 
-      {showGrid && (
-        <Grid
-          args={[100, 100]}
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#1a1a2e"
-          sectionSize={10}
-          sectionThickness={1}
-          sectionColor="#16213e"
-          fadeDistance={50}
-          infiniteGrid
+      {/* Background stars */}
+      {showStars && (
+        <Stars
+          radius={200}
+          depth={100}
+          count={5000}
+          factor={4}
+          saturation={0}
+          fade
+          speed={1}
         />
       )}
 
+      {/* Rail Track System */}
+      {gameState === 'playing' && (
+        <RailTrack onProgressUpdate={handleProgressUpdate} />
+      )}
+
+      {/* Player */}
+      <Player
+        railPosition={gameState === 'playing' ? playerPosition : undefined}
+        railQuaternion={gameState === 'playing' ? playerQuaternion : undefined}
+      />
+
+      {/* Enemy Pool */}
+      {gameState === 'playing' && (
+        <EnemyPool playerPosition={playerPosition} />
+      )}
+
+      {/* Fog for depth */}
+      <fog attach="fog" args={['#000000', 50, 200]} />
+
+      {/* Post-processing */}
       <PostFX />
     </>
   )
