@@ -17,3 +17,9 @@ export {
   getLockedPositions,
   LOCK_ON_CONFIG,
 } from './systems/lockOnSystem'
+export {
+  enemyShootSystem,
+  enemyProjectileSystem,
+  getActiveEnemyProjectiles,
+  initEnemyProjectilePool,
+} from './systems/enemyShootSystem'

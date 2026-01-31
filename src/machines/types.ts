@@ -27,6 +27,7 @@ export type GameplayEvent =
   | { type: 'UNLOCK_TARGET'; entityId: number }
   | { type: 'HIT'; entityId: number; onBeat: boolean }
   | { type: 'MISS' }
+  | { type: 'PLAYER_HIT'; damage: number }
   | { type: 'LEVEL_COMPLETE' }
   | { type: 'GAME_OVER' }
   | { type: 'ADD_SCORE'; points: number }
@@ -55,6 +56,10 @@ export interface GameContext {
   comboTimer: number
   musicTime: number
 
+  // Player state
+  health: number
+  maxHealth: number
+
   // Combat state
   isLocking: boolean
 }
@@ -76,6 +81,10 @@ export const initialContext: GameContext = {
   lockedTargetIds: [],
   comboTimer: 0,
   musicTime: 0,
+
+  // Player state
+  health: 100,
+  maxHealth: 100,
 
   // Combat state
   isLocking: false,

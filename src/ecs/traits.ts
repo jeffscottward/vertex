@@ -44,3 +44,23 @@ export const IsPlayer = trait()
 export const Pooled = trait(() => ({
   poolId: '',
 }))
+
+// Enemy projectile - bullets fired by enemies at the player
+export const EnemyProjectile = trait(() => ({
+  startX: 0,
+  startY: 0,
+  startZ: 0,
+  targetX: 0,
+  targetY: 0,
+  targetZ: 0,
+  progress: 0,
+  speed: 30,
+  damage: 10,
+}))
+
+// CanShoot tag - enemies that can fire projectiles
+export const CanShoot = trait(() => ({
+  lastShotTime: 0,
+  shotCooldown: 2, // seconds between shots
+  shotChance: 0.3, // probability of shooting when in range
+}))

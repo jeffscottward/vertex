@@ -87,6 +87,13 @@ export function useLockedTargets(): number[] {
   return useGameState((state) => state.context.lockedTargetIds)
 }
 
+export function useHealth(): { current: number; max: number } {
+  return useGameState((state) => ({
+    current: state.context.health,
+    max: state.context.maxHealth,
+  }))
+}
+
 export function useSettingsTab() {
   return useGameState((state) => state.context.settingsTab)
 }

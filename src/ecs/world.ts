@@ -1,5 +1,5 @@
 import { createWorld } from 'koota'
-import { Position, Velocity, Enemy, Projectile, Lockable, Active, Pooled } from './traits'
+import { Position, Velocity, Enemy, Projectile, Lockable, Active, Pooled, CanShoot } from './traits'
 
 // Create the game world
 export const world = createWorld()
@@ -112,6 +112,25 @@ export function activateEnemy(
   }
 
   entity.add(Active)
+
+  // Armored enemies can shoot, some basic enemies too (30% chance)
+  const canShoot = type === 'armored' || (type === 'basic' && Math.random() < 0.3)
+  if (canShoot) {
+    if (!entity.has(CanShoot)) {
+      entity.add(CanShoot)
+    }
+    const shooter = entity.get(CanShoot)
+    if (shooter) {
+      shooter.lastShotTime = 0
+      shooter.shotCooldown = type === 'armored' ? 1.5 : 2.5
+      shooter.shotChance = type === 'armored' ? 0.5 : 0.3
+    }
+  } else {
+    // Remove CanShoot if present (from pool reuse)
+    if (entity.has(CanShoot)) {
+      entity.remove(CanShoot)
+    }
+  }
 
   return entity
 }

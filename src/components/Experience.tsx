@@ -7,6 +7,7 @@ import { Player } from './Player'
 import { RailTrack } from './RailTrack'
 import { EnemyRenderer } from './EnemyRenderer'
 import { ProjectileRenderer } from './ProjectileRenderer'
+import { EnemyProjectileRenderer } from './EnemyProjectileRenderer'
 import { PostFX } from './PostFX'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useIsPlaying, sendGameEvent } from '../hooks/useGameMachine'
@@ -20,6 +21,9 @@ import {
   clearAllLocks,
   fireProjectiles,
   getLockedEntityIds,
+  enemyShootSystem,
+  enemyProjectileSystem,
+  initEnemyProjectilePool,
 } from '../ecs'
 
 export function Experience() {
@@ -45,6 +49,7 @@ export function Experience() {
   // Initialize entity pools
   if (!initialized.current) {
     initializeEntityPools()
+    initEnemyProjectilePool()
     initialized.current = true
   }
 
@@ -126,6 +131,27 @@ export function Experience() {
       sendGameEvent({ type: 'HIT', entityId: result.entityId, onBeat: result.onBeat })
     })
 
+    // Enemy shooting system - enemies fire at player
+    enemyShootSystem(elapsedTime, {
+      playerX: playerPosition.x,
+      playerY: playerPosition.y,
+      playerZ: playerPosition.z,
+      shootRange: 60,
+      projectileSpeed: 25 * difficultySettings.enemySpeed,
+    })
+
+    // Enemy projectile system - update bullets and check hits
+    enemyProjectileSystem(
+      delta,
+      playerPosition.x,
+      playerPosition.y,
+      playerPosition.z,
+      2.0, // hit radius
+      (damage) => {
+        sendGameEvent({ type: 'PLAYER_HIT', damage })
+      }
+    )
+
     wasLocking.current = isLocking.current
   })
 
@@ -164,6 +190,7 @@ export function Experience() {
         <>
           <EnemyRenderer />
           <ProjectileRenderer />
+          <EnemyProjectileRenderer />
         </>
       )}
 

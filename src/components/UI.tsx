@@ -7,16 +7,19 @@ import {
   useIsPaused,
   useIsGameOver,
   useLockedTargets,
+  useHealth,
   useSend,
 } from '../hooks/useGameMachine'
 import { useSettingsStore } from '../stores/settingsStore'
 import { PauseOverlay } from './menus/PauseOverlay'
+import { Crosshair } from './Crosshair'
 
 export function UI() {
   const score = useScore()
   const multiplier = useMultiplier()
   const overdrive = useOverdrive()
   const lockedTargets = useLockedTargets()
+  const health = useHealth()
   const isPlaying = useIsPlaying()
   const isTitle = useIsTitle()
   const isPaused = useIsPaused()
@@ -65,6 +68,51 @@ export function UI() {
           {score.toLocaleString().padStart(8, '0')}
         </div>
       </div>
+
+      {/* Health Bar - only when playing */}
+      {isPlaying && (
+        <div
+          data-component-id="ui-health"
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+          }}
+        >
+          <div style={{ fontSize: '10px', letterSpacing: '2px', opacity: 0.7, marginBottom: '5px' }}>
+            SHIELD
+          </div>
+          <div style={{
+            width: '150px',
+            height: '8px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.2)',
+          }}>
+            <div style={{
+              width: `${(health.current / health.max) * 100}%`,
+              height: '100%',
+              background: health.current > 30
+                ? 'linear-gradient(90deg, #00ffaa 0%, #00ff88 100%)'
+                : health.current > 15
+                  ? 'linear-gradient(90deg, #ffaa00 0%, #ff8800 100%)'
+                  : 'linear-gradient(90deg, #ff4444 0%, #ff0044 100%)',
+              borderRadius: '4px',
+              transition: 'width 0.2s ease, background 0.3s ease',
+              boxShadow: health.current <= 30 ? `0 0 10px ${health.current > 15 ? '#ffaa00' : '#ff0044'}` : 'none',
+            }} />
+          </div>
+          <div style={{
+            fontSize: '14px',
+            marginTop: '5px',
+            color: health.current > 30 ? '#00ffaa' : health.current > 15 ? '#ffaa00' : '#ff0044',
+            textShadow: `0 0 5px ${health.current > 30 ? '#00ffaa' : health.current > 15 ? '#ffaa00' : '#ff0044'}`,
+          }}>
+            {health.current}%
+          </div>
+        </div>
+      )}
 
       {/* Multiplier - only when playing */}
       {isPlaying && (
@@ -330,6 +378,9 @@ export function UI() {
 
       {/* Pause Overlay */}
       {isPaused && <PauseOverlay />}
+
+      {/* Crosshair - only when playing */}
+      {isPlaying && <Crosshair />}
 
       {/* CSS Animation */}
       <style>{`

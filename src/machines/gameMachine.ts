@@ -22,6 +22,10 @@ export const gameMachine = setup({
     hasTargets: ({ context }) => context.lockedTargetIds.length > 0,
     canActivateOverdrive: ({ context }) => context.overdrive >= 100,
     canGoBack: ({ context }) => context.navigationStack.length > 0,
+    isDead: ({ context, event }) => {
+      if (event.type !== 'PLAYER_HIT') return false
+      return context.health - event.damage <= 0
+    },
   },
   actions: {
     resetGame: assign({
@@ -31,6 +35,7 @@ export const gameMachine = setup({
       lockedTargetIds: [],
       comboTimer: 0,
       isLocking: false,
+      health: 100,
     }),
     setSettingsTab: assign({
       settingsTab: ({ event }) => {
@@ -128,6 +133,13 @@ export const gameMachine = setup({
     }),
     activateOverdrive: assign({
       overdrive: 0,
+    }),
+    processPlayerHit: assign({
+      health: ({ context, event }) => {
+        if (event.type !== 'PLAYER_HIT') return context.health
+        return Math.max(0, context.health - event.damage)
+      },
+      multiplier: 1, // Reset multiplier on hit
     }),
     nextLevel: assign({
       level: ({ context }) => context.level + 1,
@@ -241,6 +253,16 @@ export const gameMachine = setup({
         MISS: {
           actions: 'processMiss',
         },
+        PLAYER_HIT: [
+          {
+            guard: 'isDead',
+            target: 'gameOver',
+            actions: 'processPlayerHit',
+          },
+          {
+            actions: 'processPlayerHit',
+          },
+        ],
         ADD_OVERDRIVE: {
           actions: 'addOverdrive',
         },
