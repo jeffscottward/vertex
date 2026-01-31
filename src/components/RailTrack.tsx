@@ -4,6 +4,7 @@ import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 import { useControls } from 'leva'
 import { useRailTrack, LEVEL_1_TRACK } from '../hooks/useRailTrack'
+import { COMPONENT_IDS } from '../constants/componentIds'
 
 interface RailTrackProps {
   onProgressUpdate?: (progress: number, position: THREE.Vector3, quaternion: THREE.Quaternion) => void
@@ -24,7 +25,6 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
     tension: 0.5,
   })
 
-  // Generate track visualization points
   const trackPoints = useMemo(() => {
     const points: [number, number, number][] = []
     for (let i = 0; i <= 100; i++) {
@@ -35,7 +35,6 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
     return points
   }, [curve])
 
-  // Generate tunnel/grid lines around the track
   const tunnelLines = useMemo(() => {
     const lines: [number, number, number][][] = []
     const segments = 50
@@ -51,12 +50,10 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
         const point = curve.getPointAt(t)
         const tangent = curve.getTangentAt(t)
 
-        // Create perpendicular vectors
         const up = new THREE.Vector3(0, 1, 0)
         const right = new THREE.Vector3().crossVectors(up, tangent).normalize()
         const realUp = new THREE.Vector3().crossVectors(tangent, right).normalize()
 
-        // Calculate offset position
         const offsetX = Math.cos(angle) * radius
         const offsetY = Math.sin(angle) * radius
 
@@ -69,7 +66,6 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
       lines.push(linePoints)
     }
 
-    // Add ring segments
     for (let i = 0; i <= segments; i += 5) {
       const t = i / segments
       const point = curve.getPointAt(t)
@@ -98,25 +94,21 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
   }, [curve])
 
   useFrame((_, delta) => {
-    // Update progress along track
     progress.current += trackSpeed * delta
 
-    // Loop back to start
     if (progress.current >= 1) {
       progress.current = 0
     }
 
     const { point, quaternion } = getOrientationAtProgress(progress.current)
-
-    // Notify parent of position update
     onProgressUpdate?.(progress.current, point, quaternion)
   })
 
   return (
-    <group ref={trackGroupRef}>
-      {/* Main track path */}
+    <group ref={trackGroupRef} name={COMPONENT_IDS.RAIL_TRACK_ROOT}>
       {showTrackPath && (
         <Line
+          name={COMPONENT_IDS.RAIL_TRACK_PATH}
           points={trackPoints}
           color={trackColor}
           lineWidth={2}
@@ -125,17 +117,18 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
         />
       )}
 
-      {/* Tunnel/grid structure */}
-      {tunnelLines.map((points, i) => (
-        <Line
-          key={`tunnel-${i}`}
-          points={points}
-          color={trackColor}
-          lineWidth={1}
-          transparent
-          opacity={gridOpacity}
-        />
-      ))}
+      <group name={COMPONENT_IDS.RAIL_TRACK_TUNNEL}>
+        {tunnelLines.map((points, i) => (
+          <Line
+            key={`tunnel-${i}`}
+            points={points}
+            color={trackColor}
+            lineWidth={1}
+            transparent
+            opacity={gridOpacity}
+          />
+        ))}
+      </group>
     </group>
   )
 }

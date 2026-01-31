@@ -7,6 +7,9 @@ import { RailTrack } from './RailTrack'
 import { EnemyPool } from './EnemyPool'
 import { PostFX } from './PostFX'
 import { useGameStore } from '../stores/gameStore'
+import { useSettingsStore } from '../stores/settingsStore'
+import { COMPONENT_IDS } from '../constants/componentIds'
+import { tcl } from '../utils/debug'
 
 export function Experience() {
   const { showOrbitControls, showStars } = useControls('Debug', {
@@ -18,8 +21,8 @@ export function Experience() {
   const [playerQuaternion, setPlayerQuaternion] = useState(new THREE.Quaternion())
 
   const gameState = useGameStore((state) => state.gameState)
+  const graphicsSettings = useSettingsStore((state) => state.graphicsSettings)
 
-  // Handle rail track progress updates
   const handleProgressUpdate = useCallback((
     _progress: number,
     position: THREE.Vector3,
@@ -29,26 +32,26 @@ export function Experience() {
     setPlayerQuaternion(quaternion.clone())
   }, [])
 
+  const handleFireStart = useCallback(() => {
+    tcl('fireStart', { gameState }, 'handleFireStart', 'Experience.tsx', 35)
+  }, [gameState])
+
+  const handleFireRelease = useCallback((targets: string[]) => {
+    tcl('fireRelease', { targets, count: targets.length }, 'handleFireRelease', 'Experience.tsx', 39)
+  }, [])
+
   return (
-    <>
+    <group name={COMPONENT_IDS.EXPERIENCE_ROOT}>
       {showOrbitControls && <OrbitControls makeDefault />}
 
-      {/* Ambient lighting */}
       <ambientLight intensity={0.1} />
+      <directionalLight position={[10, 20, 10]} intensity={0.5} color="#ffffff" />
 
-      {/* Directional light */}
-      <directionalLight
-        position={[10, 20, 10]}
-        intensity={0.5}
-        color="#ffffff"
-      />
-
-      {/* Background stars */}
       {showStars && (
         <Stars
           radius={200}
           depth={100}
-          count={5000}
+          count={graphicsSettings.starCount}
           factor={4}
           saturation={0}
           fade
@@ -56,27 +59,24 @@ export function Experience() {
         />
       )}
 
-      {/* Rail Track System */}
       {gameState === 'playing' && (
         <RailTrack onProgressUpdate={handleProgressUpdate} />
       )}
 
-      {/* Player */}
       <Player
         railPosition={gameState === 'playing' ? playerPosition : undefined}
         railQuaternion={gameState === 'playing' ? playerQuaternion : undefined}
+        onFireStart={handleFireStart}
+        onFireRelease={handleFireRelease}
       />
 
-      {/* Enemy Pool */}
       {gameState === 'playing' && (
         <EnemyPool playerPosition={playerPosition} />
       )}
 
-      {/* Fog for depth */}
       <fog attach="fog" args={['#000000', 50, 200]} />
 
-      {/* Post-processing */}
-      <PostFX />
-    </>
+      {graphicsSettings.postProcessing && <PostFX />}
+    </group>
   )
 }

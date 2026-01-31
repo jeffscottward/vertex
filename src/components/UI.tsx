@@ -1,7 +1,11 @@
 import { useGameStore } from '../stores/gameStore'
+import { useSettingsStore } from '../stores/settingsStore'
+import { COMPONENT_IDS } from '../constants/componentIds'
+import { dataId } from '../utils/componentId'
 
 export function UI() {
   const { score, multiplier, overdrive, gameState, setGameState } = useGameStore()
+  const { difficulty, graphicsQuality, setDifficulty, setGraphicsQuality } = useSettingsStore()
 
   const handleStartClick = () => {
     if (gameState === 'title') {
@@ -10,28 +14,30 @@ export function UI() {
   }
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
-      fontFamily: '"Courier New", monospace',
-      color: '#fff',
-    }}>
-      {/* Score */}
-      <div style={{
+    <div
+      {...dataId(COMPONENT_IDS.UI_ROOT)}
+      style={{
         position: 'absolute',
-        top: '20px',
-        right: '20px',
-        textAlign: 'right',
-      }}>
-        <div style={{
-          fontSize: '12px',
-          opacity: 0.7,
-          letterSpacing: '2px',
-        }}>
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        fontFamily: '"Courier New", monospace',
+        color: '#fff',
+      }}
+    >
+      {/* Score */}
+      <div
+        {...dataId(COMPONENT_IDS.UI_SCORE)}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          textAlign: 'right',
+        }}
+      >
+        <div style={{ fontSize: '12px', opacity: 0.7, letterSpacing: '2px' }}>
           SCORE
         </div>
         <div style={{
@@ -46,13 +52,16 @@ export function UI() {
 
       {/* Multiplier */}
       {gameState === 'playing' && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          textAlign: 'center',
-        }}>
+        <div
+          {...dataId(COMPONENT_IDS.UI_MULTIPLIER)}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center',
+          }}
+        >
           <div style={{
             fontSize: '48px',
             fontWeight: 'bold',
@@ -67,20 +76,17 @@ export function UI() {
 
       {/* Overdrive Bar */}
       {gameState === 'playing' && (
-        <div style={{
-          position: 'absolute',
-          bottom: '30px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '250px',
-        }}>
-          <div style={{
-            fontSize: '10px',
-            textAlign: 'center',
-            marginBottom: '8px',
-            letterSpacing: '3px',
-            opacity: 0.7,
-          }}>
+        <div
+          {...dataId(COMPONENT_IDS.UI_OVERDRIVE)}
+          style={{
+            position: 'absolute',
+            bottom: '30px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '250px',
+          }}
+        >
+          <div style={{ fontSize: '10px', textAlign: 'center', marginBottom: '8px', letterSpacing: '3px', opacity: 0.7 }}>
             OVERDRIVE
           </div>
           <div style={{
@@ -94,10 +100,7 @@ export function UI() {
             <div style={{
               width: `${overdrive}%`,
               height: '100%',
-              background: `linear-gradient(90deg,
-                #ff00ff 0%,
-                #00ffff 50%,
-                #ff00ff 100%)`,
+              background: 'linear-gradient(90deg, #ff00ff 0%, #00ffff 50%, #ff00ff 100%)',
               backgroundSize: '200% 100%',
               animation: overdrive > 80 ? 'shimmer 1s infinite linear' : 'none',
               borderRadius: '3px',
@@ -107,24 +110,15 @@ export function UI() {
           </div>
 
           {/* Lock indicators */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '8px',
-            marginTop: '15px',
-          }}>
+          <div {...dataId(COMPONENT_IDS.UI_LOCK_INDICATORS)} style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '15px' }}>
             {Array.from({ length: 8 }, (_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  border: '2px solid #00ffff',
-                  background: i < 0 ? '#00ffff' : 'transparent',
-                  boxShadow: i < 0 ? '0 0 5px #00ffff' : 'none',
-                }}
-              />
+              <div key={i} style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                border: '2px solid #00ffff',
+                background: 'transparent',
+              }} />
             ))}
           </div>
         </div>
@@ -132,38 +126,86 @@ export function UI() {
 
       {/* Title Screen */}
       {gameState === 'title' && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center',
-          pointerEvents: 'auto',
-        }}>
+        <div
+          {...dataId(COMPONENT_IDS.UI_TITLE_SCREEN)}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center',
+            pointerEvents: 'auto',
+          }}
+        >
           <h1 style={{
             fontSize: '72px',
             fontWeight: 'bold',
             margin: 0,
             letterSpacing: '15px',
-            textShadow: `
-              0 0 10px #00ffff,
-              0 0 20px #00ffff,
-              0 0 40px #00ffff,
-              0 0 80px #ff00ff
-            `,
+            textShadow: '0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 80px #ff00ff',
             color: '#fff',
           }}>
             VERTEX
           </h1>
-          <p style={{
-            fontSize: '14px',
-            letterSpacing: '5px',
-            opacity: 0.7,
-            marginTop: '20px',
-          }}>
+          <p style={{ fontSize: '14px', letterSpacing: '5px', opacity: 0.7, marginTop: '20px' }}>
             ON-RAILS RHYTHM SHOOTER
           </p>
+
+          {/* Settings */}
+          <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '30px' }}>
+            {/* Difficulty */}
+            <div>
+              <div style={{ fontSize: '10px', letterSpacing: '2px', marginBottom: '8px', opacity: 0.7 }}>DIFFICULTY</div>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                {(['easy', 'medium', 'hard'] as const).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDifficulty(d)}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '12px',
+                      background: difficulty === d ? '#00ffff' : 'transparent',
+                      border: `1px solid ${difficulty === d ? '#00ffff' : '#444'}`,
+                      color: difficulty === d ? '#000' : '#666',
+                      cursor: 'pointer',
+                      fontFamily: '"Courier New", monospace',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Graphics */}
+            <div>
+              <div style={{ fontSize: '10px', letterSpacing: '2px', marginBottom: '8px', opacity: 0.7 }}>GRAPHICS</div>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                {(['low', 'medium', 'high'] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGraphicsQuality(g)}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '12px',
+                      background: graphicsQuality === g ? '#ff00ff' : 'transparent',
+                      border: `1px solid ${graphicsQuality === g ? '#ff00ff' : '#444'}`,
+                      color: graphicsQuality === g ? '#000' : '#666',
+                      cursor: 'pointer',
+                      fontFamily: '"Courier New", monospace',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <button
+            {...dataId(COMPONENT_IDS.UI_START_BUTTON)}
             onClick={handleStartClick}
             style={{
               marginTop: '40px',
@@ -190,12 +232,8 @@ export function UI() {
           >
             START
           </button>
-          <div style={{
-            fontSize: '11px',
-            opacity: 0.5,
-            marginTop: '30px',
-            lineHeight: '1.8',
-          }}>
+
+          <div {...dataId(COMPONENT_IDS.UI_CONTROLS_HELP)} style={{ fontSize: '11px', opacity: 0.5, marginTop: '30px', lineHeight: '1.8' }}>
             <div style={{ marginBottom: '10px' }}>
               <span style={{ color: '#00ffff' }}>KEYBOARD/MOUSE</span>
               <br />
