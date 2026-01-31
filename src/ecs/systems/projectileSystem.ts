@@ -1,5 +1,13 @@
 import { world, deactivateProjectile, deactivateEnemy, activateProjectile } from '../world'
 import { Position, Projectile, Active, Enemy } from '../traits'
+import { spawnExplosion } from './explosionSystem'
+
+// Enemy colors for explosions
+const ENEMY_COLORS = {
+  basic: '#ff0044',
+  armored: '#ffaa00',
+  fast: '#00ffaa',
+}
 
 interface HitResult {
   entityId: number
@@ -45,22 +53,27 @@ export function projectileSystem(
     )
 
     const progressIncrement = (proj.speed * delta) / Math.max(distance, 0.1)
-    proj.progress = Math.min(proj.progress + progressIncrement, 1)
+    const newProgress = Math.min(proj.progress + progressIncrement, 1)
 
-    // Lerp position
-    pos.x = proj.startX + (proj.targetX - proj.startX) * proj.progress
-    pos.y = proj.startY + (proj.targetY - proj.startY) * proj.progress
-    pos.z = proj.startZ + (proj.targetZ - proj.startZ) * proj.progress
+    // Update progress using entity.set()
+    entity.set(Projectile, { ...proj, progress: newProgress })
+
+    // Lerp position and update using entity.set()
+    const newX = proj.startX + (proj.targetX - proj.startX) * newProgress
+    const newY = proj.startY + (proj.targetY - proj.startY) * newProgress
+    const newZ = proj.startZ + (proj.targetZ - proj.startZ) * newProgress
+    entity.set(Position, { x: newX, y: newY, z: newZ })
 
     // Check if projectile reached target
-    if (proj.progress >= 1) {
+    if (newProgress >= 1) {
       // Find target entity and deal damage
       if (proj.targetEntityId >= 0) {
         const targetEntity = getEntityById(proj.targetEntityId)
         if (targetEntity && targetEntity.has(Enemy) && targetEntity.has(Active)) {
           const enemy = targetEntity.get(Enemy)
           if (enemy) {
-            enemy.health -= 1
+            const newHealth = enemy.health - 1
+            targetEntity.set(Enemy, { ...enemy, health: newHealth })
 
             // TODO: Determine onBeat based on beat detection
             const hitResult = { entityId: proj.targetEntityId, onBeat: false }
@@ -68,7 +81,14 @@ export function projectileSystem(
             onHit?.(hitResult)
 
             // Destroy enemy if health depleted
-            if (enemy.health <= 0) {
+            if (newHealth <= 0) {
+              // Spawn explosion at enemy position
+              const enemyPos = targetEntity.get(Position)
+              if (enemyPos) {
+                const color = ENEMY_COLORS[enemy.type] || '#ff0044'
+                spawnExplosion(enemyPos.x, enemyPos.y, enemyPos.z, color, 10)
+              }
+
               deactivateEnemy(targetEntity)
               unregisterEntity(proj.targetEntityId)
             }

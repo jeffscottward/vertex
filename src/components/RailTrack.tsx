@@ -11,7 +11,7 @@ interface RailTrackProps {
 
 export function RailTrack({ onProgressUpdate }: RailTrackProps) {
   const { trackSpeed, showTrackPath, trackColor, gridOpacity } = useControls('Rail Track', {
-    trackSpeed: { value: 0.02, min: 0.005, max: 0.1, step: 0.005 },
+    trackSpeed: { value: 0.002, min: 0.001, max: 0.05, step: 0.001 },
     showTrackPath: true,
     trackColor: '#ff00ff',
     gridOpacity: { value: 0.3, min: 0, max: 1, step: 0.1 },

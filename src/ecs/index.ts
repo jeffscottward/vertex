@@ -6,7 +6,7 @@ export * from './traits'
 
 // Systems
 export { movementSystem } from './systems/movementSystem'
-export { enemySpawnSystem, resetSpawnTimer, ENEMY_CONFIGS } from './systems/enemySpawnSystem'
+export { enemySpawnSystem, resetSpawnTimer, getCurrentWave, ENEMY_CONFIGS } from './systems/enemySpawnSystem'
 export { projectileSystem, fireProjectiles, registerEntity, unregisterEntity, getEntityById } from './systems/projectileSystem'
 export { despawnSystem } from './systems/despawnSystem'
 export {
@@ -23,3 +23,17 @@ export {
   getActiveEnemyProjectiles,
   initEnemyProjectilePool,
 } from './systems/enemyShootSystem'
+export {
+  explosionSystem,
+  spawnExplosion,
+  initExplosionPool,
+  getActiveExplosionParticles,
+} from './systems/explosionSystem'
+export {
+  powerUpSystem,
+  spawnPowerUp,
+  initPowerUpPool,
+  getActivePowerUps,
+  resetPowerUpSpawnTimer,
+  POWERUP_CONFIGS,
+} from './systems/powerUpSystem'

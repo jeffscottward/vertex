@@ -18,12 +18,16 @@ export const gameMachine = setup({
     events: {} as GameEvent,
   },
   guards: {
-    canLock: ({ context }) => context.lockedTargetIds.length < 8,
+    canLock: ({ context }) => context.lockedTargetIds.length < context.maxLockSlots,
     hasTargets: ({ context }) => context.lockedTargetIds.length > 0,
     canActivateOverdrive: ({ context }) => context.overdrive >= 100,
+    canActivateShield: ({ context }) => context.hasStoredShield && !context.shieldActive,
+    isShieldActive: ({ context }) => context.shieldActive,
     canGoBack: ({ context }) => context.navigationStack.length > 0,
     isDead: ({ context, event }) => {
       if (event.type !== 'PLAYER_HIT') return false
+      // Can't die if shield is active
+      if (context.shieldActive) return false
       return context.health - event.damage <= 0
     },
   },
@@ -36,6 +40,11 @@ export const gameMachine = setup({
       comboTimer: 0,
       isLocking: false,
       health: 100,
+      shieldActive: false,
+      shieldEndTime: 0,
+      hasStoredShield: false,
+      hasStoredOverdrive: false,
+      maxLockSlots: 8,
     }),
     setSettingsTab: assign({
       settingsTab: ({ event }) => {
@@ -133,6 +142,26 @@ export const gameMachine = setup({
     }),
     activateOverdrive: assign({
       overdrive: 0,
+    }),
+    activateShield: assign({
+      shieldActive: true,
+      shieldEndTime: () => Date.now() + 15000, // 15 seconds duration
+      hasStoredShield: false,
+    }),
+    deactivateShield: assign({
+      shieldActive: false,
+      shieldEndTime: 0,
+    }),
+    collectShield: assign({
+      hasStoredShield: true,
+    }),
+    collectOverdrive: assign({
+      // Immediately fill overdrive gauge
+      overdrive: 100,
+    }),
+    collectMultiLock: assign({
+      // Increase max locks to 16
+      maxLockSlots: 16,
     }),
     processPlayerHit: assign({
       health: ({ context, event }) => {
@@ -254,6 +283,11 @@ export const gameMachine = setup({
           actions: 'processMiss',
         },
         PLAYER_HIT: [
+          // If shield is active, ignore damage
+          {
+            guard: 'isShieldActive',
+            // No actions - damage is blocked
+          },
           {
             guard: 'isDead',
             target: 'gameOver',
@@ -263,6 +297,22 @@ export const gameMachine = setup({
             actions: 'processPlayerHit',
           },
         ],
+        ACTIVATE_SHIELD: {
+          guard: 'canActivateShield',
+          actions: 'activateShield',
+        },
+        SHIELD_EXPIRED: {
+          actions: 'deactivateShield',
+        },
+        COLLECT_SHIELD: {
+          actions: 'collectShield',
+        },
+        COLLECT_OVERDRIVE: {
+          actions: 'collectOverdrive',
+        },
+        COLLECT_MULTILOCK: {
+          actions: 'collectMultiLock',
+        },
         ADD_OVERDRIVE: {
           actions: 'addOverdrive',
         },

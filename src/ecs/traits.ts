@@ -64,3 +64,25 @@ export const CanShoot = trait(() => ({
   shotCooldown: 2, // seconds between shots
   shotChance: 0.3, // probability of shooting when in range
 }))
+
+// Explosion particle for death effects
+export const ExplosionParticle = trait(() => ({
+  startTime: 0,
+  lifetime: 0.5, // seconds
+  velocityX: 0,
+  velocityY: 0,
+  velocityZ: 0,
+  color: '#ff0044', // RGB hex color
+  scale: 0.3,
+}))
+
+// Power-up types
+export type PowerUpType = 'shield' | 'overdrive' | 'multilock'
+
+// Power-up entity
+export const PowerUp = trait(() => ({
+  type: 'shield' as PowerUpType,
+  spawnTime: 0,
+  collected: false,
+  magnetizing: false, // true when being pulled toward player
+}))

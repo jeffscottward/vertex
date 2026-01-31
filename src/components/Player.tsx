@@ -148,9 +148,14 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
       meshRef.current.scale.setScalar(1)
     }
 
-    // Check for overdrive activation (E key or Y button)
-    if (input.overdrive) {
+    // Check for overdrive activation (S key or B button)
+    if (input.overdrivePressed) {
       sendGameEvent({ type: 'ACTIVATE_OVERDRIVE' })
+    }
+
+    // Check for shield activation (A key or Y button)
+    if (input.shieldPressed) {
+      sendGameEvent({ type: 'ACTIVATE_SHIELD' })
     }
 
     // Check for pause (Start button on gamepad)

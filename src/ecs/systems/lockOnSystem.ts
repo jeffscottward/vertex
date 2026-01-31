@@ -6,17 +6,23 @@ interface LockOnConfig {
   maxLocks: number
   lockRange: number
   lockAngle: number // in radians, half-angle of cone
+  lockBoxSize: number // Size of the 2D lock box (in screen-space units)
 }
 
 const DEFAULT_CONFIG: LockOnConfig = {
   maxLocks: 8,
   lockRange: 60,
   lockAngle: Math.PI / 4, // 45 degrees
+  lockBoxSize: 0.8, // Larger box for easier targeting
 }
 
 /**
  * Lock-on system - updates which enemies are in lock-on range
  * and can be targeted by the player
+ *
+ * Uses a simpler approach: enemies within lock range and in front
+ * of the player can be locked. The aim position biases which
+ * enemies get priority (closer to aim = higher priority).
  */
 export function lockOnSystem(
   playerX: number,
@@ -30,6 +36,7 @@ export function lockOnSystem(
     entity: ReturnType<typeof world.spawn>
     distance: number
     entityId: number
+    aimScore: number // Lower = closer to aim, higher priority
   }> = []
 
   // First pass: determine which enemies are in range
@@ -50,40 +57,36 @@ export function lockOnSystem(
 
     // Check if in range
     if (distance > config.lockRange) {
-      lockable.isInRange = false
+      entity.set(Lockable, { ...lockable, isInRange: false })
       continue
     }
 
     // Check if enemy is in front of player (negative z is forward)
     if (dz > 0) {
-      lockable.isInRange = false
+      entity.set(Lockable, { ...lockable, isInRange: false })
       continue
     }
 
-    // Calculate angle from aim direction
-    // Normalize direction to enemy
-    const dirX = dx / distance
-    const dirY = dy / distance
+    // Calculate screen-space position of enemy relative to player
+    // Project onto XY plane, normalize by Z depth for perspective
+    const depthFactor = Math.max(1, Math.abs(dz))
+    const screenX = dx / depthFactor * 10 // Scale to approximate screen coords
+    const screenY = dy / depthFactor * 10
 
-    // Simple 2D angle check from crosshair position
-    const angleToEnemy = Math.atan2(
-      Math.abs(dirX - aimX),
-      Math.abs(dirY - aimY)
-    )
+    // Calculate how close enemy is to the aim point
+    // aimX and aimY are in -1 to 1 range (screen space)
+    const aimDiffX = screenX - aimX * 10
+    const aimDiffY = screenY - aimY * 10
+    const aimScore = Math.sqrt(aimDiffX * aimDiffX + aimDiffY * aimDiffY)
 
-    if (angleToEnemy > config.lockAngle) {
-      lockable.isInRange = false
-      continue
-    }
-
-    // Enemy is in range
-    lockable.isInRange = true
-    lockable.lockPriority = distance // Closer = higher priority
+    // Enemy is in range - mark as lockable
+    entity.set(Lockable, { ...lockable, isInRange: true, lockPriority: distance })
 
     inRangeEntities.push({
       entity,
       distance,
       entityId: entity.id(),
+      aimScore,
     })
   }
 
@@ -92,6 +95,8 @@ export function lockOnSystem(
 
 /**
  * Auto-lock nearest enemies up to max locks
+ *
+ * Priority: closest enemies that are near the aim direction
  */
 export function autoLockTargets(
   playerX: number,
@@ -104,8 +109,13 @@ export function autoLockTargets(
 ): number[] {
   const inRangeEntities = lockOnSystem(playerX, playerY, playerZ, aimX, aimY, config)
 
-  // Sort by distance (closest first)
-  inRangeEntities.sort((a, b) => a.distance - b.distance)
+  // Sort by combination of distance and aim proximity
+  // Weight distance more heavily, but prioritize enemies closer to aim
+  inRangeEntities.sort((a, b) => {
+    const scoreA = a.distance * 0.7 + a.aimScore * 0.3
+    const scoreB = b.distance * 0.7 + b.aimScore * 0.3
+    return scoreA - scoreB
+  })
 
   // Build lock list
   const newLocks: number[] = []
@@ -116,17 +126,17 @@ export function autoLockTargets(
     const lockable = entity.get(Lockable)
     if (!lockable) continue
 
-    // Skip if already locked
+    // Keep existing locks
     if (currentLocks.includes(entityId)) {
       newLocks.push(entityId)
-      lockable.isLocked = true
+      entity.set(Lockable, { ...lockable, isLocked: true })
       continue
     }
 
     // Add new lock if space available
     if (newLocks.length < config.maxLocks) {
       newLocks.push(entityId)
-      lockable.isLocked = true
+      entity.set(Lockable, { ...lockable, isLocked: true })
     }
   }
 
@@ -135,7 +145,7 @@ export function autoLockTargets(
     const lockable = entity.get(Lockable)
     if (!lockable) continue
     if (!newLocks.includes(entity.id())) {
-      lockable.isLocked = false
+      entity.set(Lockable, { ...lockable, isLocked: false })
     }
   }
 
@@ -149,7 +159,7 @@ export function clearAllLocks() {
   for (const entity of world.query(Lockable, Active)) {
     const lockable = entity.get(Lockable)
     if (lockable) {
-      lockable.isLocked = false
+      entity.set(Lockable, { ...lockable, isLocked: false })
     }
   }
 }

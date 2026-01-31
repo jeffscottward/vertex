@@ -12,8 +12,11 @@ export function movementSystem(delta: number) {
 
     if (!pos || !vel) continue
 
-    pos.x += vel.x * delta
-    pos.y += vel.y * delta
-    pos.z += vel.z * delta
+    // Use entity.set() to properly update trait data
+    entity.set(Position, {
+      x: pos.x + vel.x * delta,
+      y: pos.y + vel.y * delta,
+      z: pos.z + vel.z * delta,
+    })
   }
 }

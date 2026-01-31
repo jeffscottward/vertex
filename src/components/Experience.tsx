@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import { useControls } from 'leva'
@@ -8,9 +8,11 @@ import { RailTrack } from './RailTrack'
 import { EnemyRenderer } from './EnemyRenderer'
 import { ProjectileRenderer } from './ProjectileRenderer'
 import { EnemyProjectileRenderer } from './EnemyProjectileRenderer'
+import { ExplosionRenderer } from './ExplosionRenderer'
+import { PowerUpRenderer } from './PowerUpRenderer'
 import { PostFX } from './PostFX'
 import { useSettingsStore } from '../stores/settingsStore'
-import { useIsPlaying, sendGameEvent } from '../hooks/useGameMachine'
+import { useIsPlaying, sendGameEvent, getGameContext } from '../hooks/useGameMachine'
 import {
   initializeEntityPools,
   movementSystem,
@@ -24,6 +26,12 @@ import {
   enemyShootSystem,
   enemyProjectileSystem,
   initEnemyProjectilePool,
+  resetSpawnTimer,
+  explosionSystem,
+  initExplosionPool,
+  powerUpSystem,
+  initPowerUpPool,
+  resetPowerUpSpawnTimer,
 } from '../ecs'
 
 export function Experience() {
@@ -43,6 +51,7 @@ export function Experience() {
   const initialized = useRef(false)
   const isLocking = useRef(false)
   const wasLocking = useRef(false)
+  const wasPlaying = useRef(false)
   const aimPosition = useRef({ x: 0, y: 0 })
   const lockedTargets = useRef<number[]>([])
 
@@ -50,8 +59,21 @@ export function Experience() {
   if (!initialized.current) {
     initializeEntityPools()
     initEnemyProjectilePool()
+    initExplosionPool()
+    initPowerUpPool()
     initialized.current = true
   }
+
+  // Track if we need to reset on next frame (when game starts)
+  const needsSpawnReset = useRef(false)
+
+  // Set flag when game starts
+  useEffect(() => {
+    if (isPlaying && !wasPlaying.current) {
+      needsSpawnReset.current = true
+    }
+    wasPlaying.current = isPlaying
+  }, [isPlaying])
 
   const handleProgressUpdate = useCallback((
     _progress: number,
@@ -100,6 +122,13 @@ export function Experience() {
     const delta = state.clock.getDelta()
     const elapsedTime = state.clock.elapsedTime
 
+    // Reset spawn timer with current time when game starts
+    if (needsSpawnReset.current) {
+      resetSpawnTimer(elapsedTime)
+      resetPowerUpSpawnTimer(elapsedTime)
+      needsSpawnReset.current = false
+    }
+
     // Movement system
     movementSystem(delta)
 
@@ -115,6 +144,7 @@ export function Experience() {
 
     // Lock-on system - only when player is holding fire
     if (isLocking.current) {
+      const previousLocks = lockedTargets.current
       lockedTargets.current = autoLockTargets(
         playerPosition.x,
         playerPosition.y,
@@ -122,8 +152,21 @@ export function Experience() {
         aimPosition.current.x,
         aimPosition.current.y,
         lockedTargets.current,
-        { maxLocks: 8, lockRange: 60, lockAngle: Math.PI / 4 }
+        { maxLocks: 8, lockRange: 60, lockAngle: Math.PI / 4, lockBoxSize: 0.8 }
       )
+
+      // Sync new locks to game machine for UI display
+      for (const id of lockedTargets.current) {
+        if (!previousLocks.includes(id)) {
+          sendGameEvent({ type: 'LOCK_TARGET', entityId: id })
+        }
+      }
+      // Sync unlocks
+      for (const id of previousLocks) {
+        if (!lockedTargets.current.includes(id)) {
+          sendGameEvent({ type: 'UNLOCK_TARGET', entityId: id })
+        }
+      }
     }
 
     // Projectile system with hit detection
@@ -151,6 +194,29 @@ export function Experience() {
         sendGameEvent({ type: 'PLAYER_HIT', damage })
       }
     )
+
+    // Explosion particle system
+    explosionSystem(delta)
+
+    // Power-up system
+    powerUpSystem(
+      delta,
+      elapsedTime,
+      playerPosition.x,
+      playerPosition.y,
+      playerPosition.z,
+      {
+        onCollectShield: () => sendGameEvent({ type: 'COLLECT_SHIELD' }),
+        onCollectOverdrive: () => sendGameEvent({ type: 'COLLECT_OVERDRIVE' }),
+        onCollectMultiLock: () => sendGameEvent({ type: 'COLLECT_MULTILOCK' }),
+      }
+    )
+
+    // Check shield expiration
+    const context = getGameContext()
+    if (context.shieldActive && Date.now() >= context.shieldEndTime) {
+      sendGameEvent({ type: 'SHIELD_EXPIRED' })
+    }
 
     wasLocking.current = isLocking.current
   })
@@ -191,6 +257,8 @@ export function Experience() {
           <EnemyRenderer />
           <ProjectileRenderer />
           <EnemyProjectileRenderer />
+          <ExplosionRenderer />
+          <PowerUpRenderer />
         </>
       )}
 

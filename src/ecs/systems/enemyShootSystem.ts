@@ -43,23 +43,19 @@ function fireEnemyProjectile(
     if (!entity.has(Active)) {
       entity.add(Active)
 
-      const pos = entity.get(Position)
-      const proj = entity.get(EnemyProjectile)
-
-      if (pos && proj) {
-        pos.x = startX
-        pos.y = startY
-        pos.z = startZ
-
-        proj.startX = startX
-        proj.startY = startY
-        proj.startZ = startZ
-        proj.targetX = targetX
-        proj.targetY = targetY
-        proj.targetZ = targetZ
-        proj.progress = 0
-        proj.speed = speed
-      }
+      // Use entity.set() to properly update trait data
+      entity.set(Position, { x: startX, y: startY, z: startZ })
+      entity.set(EnemyProjectile, {
+        startX,
+        startY,
+        startZ,
+        targetX,
+        targetY,
+        targetZ,
+        progress: 0,
+        speed,
+        damage: 10,
+      })
       return entity
     }
   }
@@ -99,8 +95,8 @@ export function enemyShootSystem(
     // Random chance to shoot
     if (Math.random() > shooter.shotChance) continue
 
-    // Fire!
-    shooter.lastShotTime = elapsedTime
+    // Fire! Update last shot time using entity.set()
+    entity.set(CanShoot, { ...shooter, lastShotTime: elapsedTime })
 
     // Lead the shot slightly based on distance
     const leadFactor = dist * 0.02
@@ -134,23 +130,27 @@ export function enemyProjectileSystem(
     if (!pos || !proj) continue
 
     // Update progress
-    proj.progress += delta * proj.speed * 0.02
+    const newProgress = proj.progress + delta * proj.speed * 0.02
 
-    if (proj.progress >= 1) {
+    if (newProgress >= 1) {
       // Projectile reached target, deactivate
       entity.remove(Active)
       continue
     }
 
+    // Update progress using entity.set()
+    entity.set(EnemyProjectile, { ...proj, progress: newProgress })
+
     // Interpolate position
-    pos.x = proj.startX + (proj.targetX - proj.startX) * proj.progress
-    pos.y = proj.startY + (proj.targetY - proj.startY) * proj.progress
-    pos.z = proj.startZ + (proj.targetZ - proj.startZ) * proj.progress
+    const newX = proj.startX + (proj.targetX - proj.startX) * newProgress
+    const newY = proj.startY + (proj.targetY - proj.startY) * newProgress
+    const newZ = proj.startZ + (proj.targetZ - proj.startZ) * newProgress
+    entity.set(Position, { x: newX, y: newY, z: newZ })
 
     // Check collision with player
-    const dx = playerX - pos.x
-    const dy = playerY - pos.y
-    const dz = playerZ - pos.z
+    const dx = playerX - newX
+    const dy = playerY - newY
+    const dz = playerZ - newZ
     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
 
     if (dist < hitRadius) {

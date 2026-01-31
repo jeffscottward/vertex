@@ -16,6 +16,11 @@ export interface InputState {
   fireReleased: boolean // Just released this frame
 
   overdrive: boolean
+  overdrivePressed: boolean // Just pressed this frame
+
+  shield: boolean
+  shieldPressed: boolean // Just pressed this frame
+
   pause: boolean
 
   // Input source
@@ -60,6 +65,9 @@ export function useInput(config: InputConfig = {}) {
     firePressed: false,
     fireReleased: false,
     overdrive: false,
+    overdrivePressed: false,
+    shield: false,
+    shieldPressed: false,
     pause: false,
     inputSource: 'keyboard',
   })
@@ -278,6 +286,10 @@ export function useInput(config: InputConfig = {}) {
 
     const prevFire = inputState.current.fire
 
+    // Store previous states for press detection
+    const prevOverdrive = inputState.current.overdrive
+    const prevShield = inputState.current.shield
+
     // Determine input source and gather input
     if (lastInputSource.current === 'gamepad' && gamepad) {
       // Gamepad input
@@ -286,11 +298,14 @@ export function useInput(config: InputConfig = {}) {
       inputState.current.aimX = gamepad.rightX
       inputState.current.aimY = gamepad.rightY
 
-      // RT or A button to fire
-      inputState.current.fire = gamepad.rt > 0.5 || gamepad.a
+      // A button to fire (REZ-style: hold to lock, release to fire)
+      inputState.current.fire = gamepad.a
 
-      // Y button for overdrive
-      inputState.current.overdrive = gamepad.y
+      // B button for overdrive
+      inputState.current.overdrive = gamepad.b
+
+      // Y button for shield
+      inputState.current.shield = gamepad.y
 
       // Start for pause
       inputState.current.pause = gamepad.start
@@ -298,14 +313,14 @@ export function useInput(config: InputConfig = {}) {
       inputState.current.inputSource = 'gamepad'
     } else {
       // Keyboard/Mouse input
-
-      // WASD/Arrows for movement (keyboard aiming alternative)
+      // Movement: WASD moves the player, arrows also work
+      // Note: A is now shield, so movement is W/S for forward/back, arrow keys for lateral
       let keyMoveX = 0
       let keyMoveY = 0
-      if (keys.a || keys.arrowLeft) keyMoveX -= 1
-      if (keys.d || keys.arrowRight) keyMoveX += 1
+      if (keys.arrowLeft) keyMoveX -= 1
+      if (keys.arrowRight) keyMoveX += 1
       if (keys.w || keys.arrowUp) keyMoveY += 1
-      if (keys.s || keys.arrowDown) keyMoveY -= 1
+      if (keys.arrowDown) keyMoveY -= 1
 
       // Mouse position for aiming (primary)
       inputState.current.aimX = mouse.x * settings.mouseSensitivity
@@ -319,17 +334,24 @@ export function useInput(config: InputConfig = {}) {
       inputState.current.moveX = Math.max(-1, Math.min(1, inputState.current.moveX))
       inputState.current.moveY = Math.max(-1, Math.min(1, inputState.current.moveY))
 
-      // Space or left click to fire
-      inputState.current.fire = keys.space || mouse.leftButton
+      // D key or left click to fire (hold to lock, release to fire)
+      inputState.current.fire = keys.d || mouse.leftButton
 
-      // E or shift for overdrive
-      inputState.current.overdrive = keys.e || keys.shift
+      // S key for overdrive activation
+      inputState.current.overdrive = keys.s
+
+      // A key for shield activation
+      inputState.current.shield = keys.a
 
       // Escape for pause
       inputState.current.pause = keys.escape
 
       inputState.current.inputSource = 'keyboard'
     }
+
+    // Detect overdrive/shield press
+    inputState.current.overdrivePressed = inputState.current.overdrive && !prevOverdrive
+    inputState.current.shieldPressed = inputState.current.shield && !prevShield
 
     // Detect fire press/release
     inputState.current.firePressed = inputState.current.fire && !prevFire

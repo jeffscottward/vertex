@@ -94,6 +94,22 @@ export function useHealth(): { current: number; max: number } {
   }))
 }
 
+export function useShieldState(): { active: boolean; stored: boolean; endTime: number } {
+  return useGameState((state) => ({
+    active: state.context.shieldActive,
+    stored: state.context.hasStoredShield,
+    endTime: state.context.shieldEndTime,
+  }))
+}
+
+export function usePowerUpState(): { hasShield: boolean; hasOverdrive: boolean; maxLocks: number } {
+  return useGameState((state) => ({
+    hasShield: state.context.hasStoredShield,
+    hasOverdrive: state.context.hasStoredOverdrive,
+    maxLocks: state.context.maxLockSlots,
+  }))
+}
+
 export function useSettingsTab() {
   return useGameState((state) => state.context.settingsTab)
 }

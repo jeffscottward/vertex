@@ -84,32 +84,20 @@ export function activateEnemy(
 
   const healthByType = { basic: 1, armored: 3, fast: 1 }
 
-  const pos = entity.get(Position)
-  const vel = entity.get(Velocity)
-  const enemy = entity.get(Enemy)
-  const lockable = entity.get(Lockable)
-
-  if (pos) {
-    pos.x = x
-    pos.y = y
-    pos.z = z
-  }
-  if (vel) {
-    vel.x = vx
-    vel.y = vy
-    vel.z = vz
-  }
-  if (enemy) {
-    enemy.type = type
-    enemy.health = healthByType[type]
-    enemy.maxHealth = healthByType[type]
-    enemy.spawnTime = performance.now()
-  }
-  if (lockable) {
-    lockable.isInRange = false
-    lockable.isLocked = false
-    lockable.lockPriority = 0
-  }
+  // Use entity.set() to properly update trait data in Koota
+  entity.set(Position, { x, y, z })
+  entity.set(Velocity, { x: vx, y: vy, z: vz })
+  entity.set(Enemy, {
+    type,
+    health: healthByType[type],
+    maxHealth: healthByType[type],
+    spawnTime: performance.now(),
+  })
+  entity.set(Lockable, {
+    isInRange: false,
+    isLocked: false,
+    lockPriority: 0,
+  })
 
   entity.add(Active)
 
@@ -139,18 +127,9 @@ export function activateEnemy(
 export function deactivateEnemy(entity: ReturnType<typeof world.spawn>) {
   if (!entity.has(Active)) return
 
-  const pos = entity.get(Position)
-  const lockable = entity.get(Lockable)
-
-  if (pos) {
-    pos.x = 0
-    pos.y = 0
-    pos.z = -1000
-  }
-  if (lockable) {
-    lockable.isInRange = false
-    lockable.isLocked = false
-  }
+  // Use entity.set() to properly update trait data
+  entity.set(Position, { x: 0, y: 0, z: -1000 })
+  entity.set(Lockable, { isInRange: false, isLocked: false, lockPriority: 0 })
 
   entity.remove(Active)
 }
@@ -169,25 +148,19 @@ export function activateProjectile(
   const entity = getInactiveProjectile()
   if (!entity) return null
 
-  const pos = entity.get(Position)
-  const proj = entity.get(Projectile)
-
-  if (pos) {
-    pos.x = startX
-    pos.y = startY
-    pos.z = startZ
-  }
-  if (proj) {
-    proj.startX = startX
-    proj.startY = startY
-    proj.startZ = startZ
-    proj.targetX = targetX
-    proj.targetY = targetY
-    proj.targetZ = targetZ
-    proj.targetEntityId = targetEntityId
-    proj.progress = 0
-    proj.speed = speed
-  }
+  // Use entity.set() to properly update trait data
+  entity.set(Position, { x: startX, y: startY, z: startZ })
+  entity.set(Projectile, {
+    startX,
+    startY,
+    startZ,
+    targetX,
+    targetY,
+    targetZ,
+    targetEntityId,
+    progress: 0,
+    speed,
+  })
 
   entity.add(Active)
 
@@ -198,12 +171,8 @@ export function activateProjectile(
 export function deactivateProjectile(entity: ReturnType<typeof world.spawn>) {
   if (!entity.has(Active)) return
 
-  const pos = entity.get(Position)
-  if (pos) {
-    pos.x = 0
-    pos.y = 0
-    pos.z = -1000
-  }
+  // Use entity.set() to properly update trait data
+  entity.set(Position, { x: 0, y: 0, z: -1000 })
 
   entity.remove(Active)
 }
