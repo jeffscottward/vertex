@@ -106,11 +106,11 @@ export function enemySpawnSystem(
   // Spawn closer so enemies are visible (30-50 units ahead)
   const spawnZ = playerZ - (30 + Math.random() * 20)
 
-  // Spawn in a spread pattern for variety
-  const spreadX = 12 + waveState.currentWave * 0.5 // Wider spread in later waves
-  const spreadY = 8 + waveState.currentWave * 0.3
+  // Spawn in a spread pattern for variety - much wider for bigger tunnel
+  const spreadX = 35 + waveState.currentWave * 1.5 // Wider spread in later waves
+  const spreadY = 25 + waveState.currentWave * 1.0
   const spawnX = (Math.random() - 0.5) * spreadX
-  const spawnY = (Math.random() - 0.5) * spreadY + 3 // Offset up from track center
+  const spawnY = (Math.random() - 0.5) * spreadY + 5 // Offset up from track center
 
   // Calculate velocity - enemies move towards player (positive Z)
   const vx = (Math.random() - 0.5) * 3

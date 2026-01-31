@@ -45,6 +45,8 @@ export const gameMachine = setup({
       hasStoredShield: false,
       hasStoredOverdrive: false,
       maxLockSlots: 8,
+      overdriveActive: false,
+      overdriveEndTime: 0,
     }),
     setSettingsTab: assign({
       settingsTab: ({ event }) => {
@@ -84,14 +86,14 @@ export const gameMachine = setup({
       },
       multiplier: ({ context, event }) => {
         if (event.type !== 'HIT') return context.multiplier
-        if (event.onBeat) {
-          return Math.min(context.multiplier + 1, context.maxMultiplier)
-        }
-        return context.multiplier
+        // Always increment multiplier on hit (combo system)
+        // Beat detection will be added later for bonus multiplier
+        return Math.min(context.multiplier + 1, context.maxMultiplier)
       },
       overdrive: ({ context, event }) => {
         if (event.type !== 'HIT') return context.overdrive
-        const overdriveGain = event.onBeat ? 5 : 2
+        // Gain overdrive on every hit, more for on-beat
+        const overdriveGain = event.onBeat ? 5 : 3
         return Math.min(context.overdrive + overdriveGain, 100)
       },
       comboTimer: 3,
@@ -142,6 +144,12 @@ export const gameMachine = setup({
     }),
     activateOverdrive: assign({
       overdrive: 0,
+      overdriveActive: true,
+      overdriveEndTime: () => Date.now() + 10000, // 10 seconds duration
+    }),
+    deactivateOverdrive: assign({
+      overdriveActive: false,
+      overdriveEndTime: 0,
     }),
     activateShield: assign({
       shieldActive: true,
@@ -156,7 +164,6 @@ export const gameMachine = setup({
       hasStoredShield: true,
     }),
     collectOverdrive: assign({
-      // Immediately fill overdrive gauge
       overdrive: 100,
     }),
     collectMultiLock: assign({
@@ -319,6 +326,9 @@ export const gameMachine = setup({
         ACTIVATE_OVERDRIVE: {
           guard: 'canActivateOverdrive',
           actions: 'activateOverdrive',
+        },
+        OVERDRIVE_EXPIRED: {
+          actions: 'deactivateOverdrive',
         },
       },
 

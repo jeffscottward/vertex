@@ -36,6 +36,7 @@ export type GameplayEvent =
   | { type: 'ACTIVATE_OVERDRIVE' }
   | { type: 'ACTIVATE_SHIELD' }
   | { type: 'SHIELD_EXPIRED' }
+  | { type: 'OVERDRIVE_EXPIRED' }
   | { type: 'COLLECT_SHIELD' }
   | { type: 'COLLECT_OVERDRIVE' }
   | { type: 'COLLECT_MULTILOCK' }
@@ -74,6 +75,8 @@ export interface GameContext {
   hasStoredShield: boolean // player has collected a shield power-up
   hasStoredOverdrive: boolean // player has collected an overdrive power-up
   maxLockSlots: number // can be increased by multi-lock power-up
+  overdriveActive: boolean // overdrive mode is active (auto-fire)
+  overdriveEndTime: number // timestamp when overdrive expires
 }
 
 // Initial context values
@@ -107,6 +110,8 @@ export const initialContext: GameContext = {
   hasStoredShield: false,
   hasStoredOverdrive: false,
   maxLockSlots: 8,
+  overdriveActive: false,
+  overdriveEndTime: 0,
 }
 
 // State value types for type-safe state checks

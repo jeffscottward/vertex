@@ -110,6 +110,14 @@ export function usePowerUpState(): { hasShield: boolean; hasOverdrive: boolean; 
   }))
 }
 
+export function useOverdriveState(): { active: boolean; gauge: number; endTime: number } {
+  return useGameState((state) => ({
+    active: state.context.overdriveActive,
+    gauge: state.context.overdrive,
+    endTime: state.context.overdriveEndTime,
+  }))
+}
+
 export function useSettingsTab() {
   return useGameState((state) => state.context.settingsTab)
 }

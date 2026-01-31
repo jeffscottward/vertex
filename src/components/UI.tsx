@@ -2,6 +2,7 @@ import {
   useScore,
   useMultiplier,
   useOverdrive,
+  useOverdriveState,
   useIsPlaying,
   useIsTitle,
   useIsPaused,
@@ -18,6 +19,7 @@ export function UI() {
   const score = useScore()
   const multiplier = useMultiplier()
   const overdrive = useOverdrive()
+  const overdriveState = useOverdriveState()
   const lockedTargets = useLockedTargets()
   const health = useHealth()
   const isPlaying = useIsPlaying()
@@ -150,8 +152,17 @@ export function UI() {
             width: '250px',
           }}
         >
-          <div style={{ fontSize: '10px', textAlign: 'center', marginBottom: '8px', letterSpacing: '3px', opacity: 0.7 }}>
-            OVERDRIVE
+          <div style={{
+            fontSize: '10px',
+            textAlign: 'center',
+            marginBottom: '8px',
+            letterSpacing: '3px',
+            opacity: overdriveState.active ? 1 : 0.7,
+            color: overdriveState.active ? '#ff00ff' : '#fff',
+            textShadow: overdriveState.active ? '0 0 10px #ff00ff' : 'none',
+            animation: overdriveState.active ? 'pulse 0.5s infinite alternate' : 'none',
+          }}>
+            {overdriveState.active ? '⚡ OVERDRIVE ACTIVE ⚡' : 'OVERDRIVE'}
           </div>
           <div style={{
             width: '100%',
@@ -159,19 +170,40 @@ export function UI() {
             background: 'rgba(255,255,255,0.1)',
             borderRadius: '3px',
             overflow: 'hidden',
-            border: '1px solid rgba(255,255,255,0.2)',
+            border: overdriveState.active
+              ? '1px solid #ff00ff'
+              : '1px solid rgba(255,255,255,0.2)',
+            boxShadow: overdriveState.active ? '0 0 15px #ff00ff' : 'none',
           }}>
             <div style={{
-              width: `${overdrive}%`,
+              width: overdriveState.active
+                ? `${Math.max(0, 100 - ((Date.now() - (overdriveState.endTime - 10000)) / 100))}%`
+                : `${overdrive}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #ff00ff 0%, #00ffff 50%, #ff00ff 100%)',
+              background: overdriveState.active
+                ? 'linear-gradient(90deg, #ff00ff 0%, #ffff00 50%, #ff00ff 100%)'
+                : 'linear-gradient(90deg, #ff00ff 0%, #00ffff 50%, #ff00ff 100%)',
               backgroundSize: '200% 100%',
-              animation: overdrive > 80 ? 'shimmer 1s infinite linear' : 'none',
+              animation: overdrive >= 100 || overdriveState.active ? 'shimmer 0.5s infinite linear' : 'none',
               borderRadius: '3px',
               transition: 'width 0.1s',
-              boxShadow: overdrive > 50 ? '0 0 10px #ff00ff' : 'none',
+              boxShadow: overdrive > 50 || overdriveState.active ? '0 0 10px #ff00ff' : 'none',
             }} />
           </div>
+
+          {/* Ready indicator when overdrive is full */}
+          {overdrive >= 100 && !overdriveState.active && (
+            <div style={{
+              textAlign: 'center',
+              fontSize: '11px',
+              marginTop: '5px',
+              color: '#ffff00',
+              textShadow: '0 0 8px #ffff00',
+              animation: 'pulse 0.5s infinite alternate',
+            }}>
+              PRESS S TO ACTIVATE
+            </div>
+          )}
 
           {/* Lock indicators */}
           <div data-component-id="ui-lock-indicators" style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '15px' }}>
@@ -303,12 +335,12 @@ export function UI() {
             <div style={{ marginBottom: '10px' }}>
               <span style={{ color: '#00ffff' }}>KEYBOARD/MOUSE</span>
               <br />
-              MOUSE = AIM • WASD = MOVE • SPACE/CLICK = FIRE • E = OVERDRIVE
+              MOUSE = AIM • WASD = MOVE • D/CLICK = FIRE • S = OVERDRIVE • A = SHIELD
             </div>
             <div>
               <span style={{ color: '#ff00ff' }}>GAMEPAD</span>
               <br />
-              LEFT STICK = MOVE • RIGHT STICK = AIM • RT/A = FIRE • Y = OVERDRIVE
+              LEFT STICK = MOVE • RIGHT STICK = AIM • A = FIRE • B = OVERDRIVE • Y = SHIELD
             </div>
           </div>
         </div>
@@ -387,6 +419,10 @@ export function UI() {
         @keyframes shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
+        }
+        @keyframes pulse {
+          0% { opacity: 0.7; }
+          100% { opacity: 1; }
         }
       `}</style>
     </div>

@@ -11,9 +11,9 @@ interface LockOnConfig {
 
 const DEFAULT_CONFIG: LockOnConfig = {
   maxLocks: 8,
-  lockRange: 60,
+  lockRange: 80,  // Increased for bigger tunnel
   lockAngle: Math.PI / 4, // 45 degrees
-  lockBoxSize: 0.8, // Larger box for easier targeting
+  lockBoxSize: 0.3, // Smaller box for precise targeting
 }
 
 /**
@@ -69,17 +69,25 @@ export function lockOnSystem(
 
     // Calculate screen-space position of enemy relative to player
     // Project onto XY plane, normalize by Z depth for perspective
-    const depthFactor = Math.max(1, Math.abs(dz))
-    const screenX = dx / depthFactor * 10 // Scale to approximate screen coords
-    const screenY = dy / depthFactor * 10
+    const depthFactor = Math.max(10, Math.abs(dz))
+    const screenX = (dx / depthFactor) // Normalized screen position
+    const screenY = (dy / depthFactor)
 
     // Calculate how close enemy is to the aim point
     // aimX and aimY are in -1 to 1 range (screen space)
-    const aimDiffX = screenX - aimX * 10
-    const aimDiffY = screenY - aimY * 10
+    const aimDiffX = Math.abs(screenX - aimX)
+    const aimDiffY = Math.abs(screenY - aimY)
+
+    // ONLY lock enemies inside the lock box around the cursor
+    const halfBox = config.lockBoxSize / 2
+    if (aimDiffX > halfBox || aimDiffY > halfBox) {
+      entity.set(Lockable, { ...lockable, isInRange: false })
+      continue
+    }
+
     const aimScore = Math.sqrt(aimDiffX * aimDiffX + aimDiffY * aimDiffY)
 
-    // Enemy is in range - mark as lockable
+    // Enemy is in range AND inside lock box - mark as lockable
     entity.set(Lockable, { ...lockable, isInRange: true, lockPriority: distance })
 
     inRangeEntities.push({

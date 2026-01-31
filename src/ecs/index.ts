@@ -5,7 +5,7 @@ export * from './world'
 export * from './traits'
 
 // Systems
-export { movementSystem } from './systems/movementSystem'
+export { movementSystem, resetMovementTime } from './systems/movementSystem'
 export { enemySpawnSystem, resetSpawnTimer, getCurrentWave, ENEMY_CONFIGS } from './systems/enemySpawnSystem'
 export { projectileSystem, fireProjectiles, registerEntity, unregisterEntity, getEntityById } from './systems/projectileSystem'
 export { despawnSystem } from './systems/despawnSystem'

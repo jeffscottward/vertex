@@ -23,11 +23,11 @@ export function Crosshair() {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') setIsHoldingFire(true)
+      if (e.code === 'KeyD') setIsHoldingFire(true)
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') setIsHoldingFire(false)
+      if (e.code === 'KeyD') setIsHoldingFire(false)
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -81,7 +81,7 @@ export function Crosshair() {
           position: 'absolute',
           left: '50%',
           top: '50%',
-          transform: `translate(-50%, -50%) scale(${pulseScale}) rotate(${isHoldingFire ? 45 : 0}deg)`,
+          transform: `translate(-50%, -50%) scale(${pulseScale})`,
           width: `${boxSize}px`,
           height: `${boxSize}px`,
           border: `2px solid ${boxColor}`,
@@ -213,11 +213,12 @@ export function Crosshair() {
         </div>
       )}
 
-      {/* Lock orbs around crosshair when locking */}
+      {/* Lock orbs around crosshair when locking - static positions, fill up as locks accumulate */}
       {isHoldingFire && (
         <div data-component-id="ui-lock-orbs">
           {Array.from({ length: 8 }, (_, i) => {
-            const angle = (i / 8) * Math.PI * 2 + Date.now() * 0.002
+            // Static angle - starts at top, goes clockwise
+            const angle = (i / 8) * Math.PI * 2 - Math.PI / 2
             const radius = 50
             const isActive = i < lockCount
             return (
@@ -227,14 +228,14 @@ export function Crosshair() {
                   position: 'absolute',
                   left: `${Math.cos(angle) * radius}px`,
                   top: `${Math.sin(angle) * radius}px`,
-                  width: '8px',
-                  height: '8px',
+                  width: '10px',
+                  height: '10px',
                   borderRadius: '50%',
                   background: isActive ? '#ff00ff' : 'transparent',
-                  border: `2px solid ${isActive ? '#ff00ff' : '#00ffff'}`,
+                  border: `2px solid ${isActive ? '#ff00ff' : '#00ffff44'}`,
                   boxShadow: isActive ? '0 0 10px #ff00ff' : 'none',
                   transform: 'translate(-50%, -50%)',
-                  transition: 'all 0.1s ease',
+                  transition: 'background 0.15s ease, border 0.15s ease, box-shadow 0.15s ease',
                 }}
               />
             )

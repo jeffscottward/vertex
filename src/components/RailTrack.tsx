@@ -37,8 +37,8 @@ export function RailTrack({ onProgressUpdate }: RailTrackProps) {
   const tunnelLines = useMemo(() => {
     const lines: [number, number, number][][] = []
     const segments = 50
-    const radius = 15
-    const sides = 8
+    const radius = 45  // Much bigger tunnel
+    const sides = 12   // More sides for smoother appearance
 
     for (let s = 0; s < sides; s++) {
       const angle = (s / sides) * Math.PI * 2

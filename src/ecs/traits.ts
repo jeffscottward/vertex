@@ -76,6 +76,19 @@ export const ExplosionParticle = trait(() => ({
   scale: 0.3,
 }))
 
+// Movement pattern types for enemies
+export type MovementPatternType = 'linear' | 'sine' | 'zigzag' | 'circular' | 'spiral'
+
+// Movement pattern - defines how an enemy moves
+export const MovementPattern = trait(() => ({
+  type: 'linear' as MovementPatternType,
+  amplitude: 5, // Size of movement pattern
+  frequency: 2, // Speed of pattern oscillation
+  phase: 0, // Starting phase offset
+  baseX: 0, // Original X position for pattern calculations
+  baseY: 0, // Original Y position for pattern calculations
+}))
+
 // Power-up types
 export type PowerUpType = 'shield' | 'overdrive' | 'multilock'
 

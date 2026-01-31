@@ -29,9 +29,9 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
 
   const { playerColor, moveRange, cameraFollow, cameraDistance } = useControls('Player', {
     playerColor: '#00ffff',
-    moveRange: { value: 6, min: 2, max: 15, step: 0.5 },
+    moveRange: { value: 18, min: 5, max: 40, step: 1 },  // Much larger for bigger tunnel
     cameraFollow: true,
-    cameraDistance: { value: 12, min: 5, max: 25, step: 1 },
+    cameraDistance: { value: 20, min: 10, max: 50, step: 1 },  // Further back for wider view
   })
 
   // Handle click to start from title
@@ -183,20 +183,6 @@ export function Player({ railPosition, railQuaternion, onFireStart, onFireReleas
         <meshBasicMaterial color={playerColor} wireframe transparent opacity={0.3} />
       </mesh>
 
-      {/* Lock indicator particles */}
-      {isLocking.current && (
-        <group name="player-lock-indicators">
-          {Array.from({ length: 8 }, (_, i) => {
-            const angle = (i / 8) * Math.PI * 2 + performance.now() * 0.003
-            return (
-              <mesh key={i} position={[Math.cos(angle) * 1.2, Math.sin(angle) * 1.2, 0]}>
-                <sphereGeometry args={[0.08, 8, 8]} />
-                <meshBasicMaterial color="#ff00ff" />
-              </mesh>
-            )
-          })}
-        </group>
-      )}
     </group>
   )
 }

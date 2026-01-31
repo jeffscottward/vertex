@@ -50,11 +50,12 @@ export function ExplosionRenderer() {
 
       meshRef.current.setMatrixAt(count, tempObject.matrix)
 
-      // Set color with alpha baked into intensity
+      // Set color with alpha baked into intensity - boost for bloom
       tempColor.set(particle.color)
-      colorArray[count * 3] = tempColor.r * alpha
-      colorArray[count * 3 + 1] = tempColor.g * alpha
-      colorArray[count * 3 + 2] = tempColor.b * alpha
+      const boost = 2.0 // Emissive boost for bloom
+      colorArray[count * 3] = tempColor.r * alpha * boost
+      colorArray[count * 3 + 1] = tempColor.g * alpha * boost
+      colorArray[count * 3 + 2] = tempColor.b * alpha * boost
 
       count++
     }
@@ -69,13 +70,15 @@ export function ExplosionRenderer() {
     }
   })
 
-  // Create material with emissive for bloom effect
+  // Create material - use basic material with color for better visibility
   const material = useMemo(() => {
     return new THREE.MeshBasicMaterial({
       wireframe: true,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
+      opacity: 1.0,
+      depthWrite: false, // Prevent z-fighting
+      blending: THREE.AdditiveBlending, // Additive for glow effect
     })
   }, [])
 

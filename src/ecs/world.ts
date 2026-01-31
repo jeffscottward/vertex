@@ -1,5 +1,32 @@
 import { createWorld } from 'koota'
-import { Position, Velocity, Enemy, Projectile, Lockable, Active, Pooled, CanShoot } from './traits'
+import { Position, Velocity, Enemy, Projectile, Lockable, Active, Pooled, CanShoot, MovementPattern, type MovementPatternType } from './traits'
+
+// Movement patterns by enemy type
+const PATTERN_WEIGHTS: Record<'basic' | 'armored' | 'fast', { patterns: MovementPatternType[]; weights: number[] }> = {
+  basic: {
+    patterns: ['linear', 'sine', 'zigzag'],
+    weights: [0.4, 0.35, 0.25], // 40% linear, 35% sine, 25% zigzag
+  },
+  armored: {
+    patterns: ['linear', 'circular', 'spiral'],
+    weights: [0.3, 0.4, 0.3], // 30% linear, 40% circular, 30% spiral
+  },
+  fast: {
+    patterns: ['zigzag', 'sine', 'spiral'],
+    weights: [0.4, 0.35, 0.25], // 40% zigzag, 35% sine, 25% spiral
+  },
+}
+
+function pickRandomPattern(type: 'basic' | 'armored' | 'fast'): MovementPatternType {
+  const { patterns, weights } = PATTERN_WEIGHTS[type]
+  const rand = Math.random()
+  let cumulative = 0
+  for (let i = 0; i < weights.length; i++) {
+    cumulative += weights[i]
+    if (rand < cumulative) return patterns[i]
+  }
+  return patterns[patterns.length - 1]
+}
 
 // Create the game world
 export const world = createWorld()
@@ -22,6 +49,7 @@ export function initializeEntityPools() {
       Velocity({ x: 0, y: 0, z: 0 }),
       Enemy({ type: 'basic', health: 1, maxHealth: 1, spawnTime: 0 }),
       Lockable({ isInRange: false, isLocked: false, lockPriority: 0 }),
+      MovementPattern({ type: 'linear', amplitude: 5, frequency: 2, phase: 0, baseX: 0, baseY: 0 }),
       Pooled({ poolId: `enemy-${i}` })
     )
   }
@@ -97,6 +125,19 @@ export function activateEnemy(
     isInRange: false,
     isLocked: false,
     lockPriority: 0,
+  })
+
+  // Assign movement pattern based on enemy type
+  const patternType = pickRandomPattern(type)
+  const amplitudeByType = { basic: 4, armored: 3, fast: 6 }
+  const frequencyByType = { basic: 1.5, armored: 1, fast: 2.5 }
+  entity.set(MovementPattern, {
+    type: patternType,
+    amplitude: amplitudeByType[type] + Math.random() * 2,
+    frequency: frequencyByType[type] + Math.random() * 0.5,
+    phase: Math.random() * Math.PI * 2, // Random starting phase
+    baseX: x,
+    baseY: y,
   })
 
   entity.add(Active)

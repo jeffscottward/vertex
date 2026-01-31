@@ -42,8 +42,8 @@ export function spawnExplosion(
     if (spawned >= particleCount) break
     if (entity.has(Active)) continue
 
-    // Random velocity outward
-    const speed = 5 + Math.random() * 10
+    // Random velocity outward - increased speed for more dramatic effect
+    const speed = 8 + Math.random() * 15
     const theta = Math.random() * Math.PI * 2
     const phi = Math.random() * Math.PI
 
@@ -55,12 +55,12 @@ export function spawnExplosion(
     entity.set(Velocity, { x: vx, y: vy, z: vz })
     entity.set(ExplosionParticle, {
       startTime: performance.now(),
-      lifetime: 0.4 + Math.random() * 0.2, // 0.4-0.6 seconds
+      lifetime: 0.5 + Math.random() * 0.3, // 0.5-0.8 seconds (longer)
       velocityX: vx,
       velocityY: vy,
       velocityZ: vz,
       color,
-      scale: 0.2 + Math.random() * 0.2,
+      scale: 0.5 + Math.random() * 0.5, // Larger particles: 0.5-1.0
     })
     entity.add(Active)
     spawned++

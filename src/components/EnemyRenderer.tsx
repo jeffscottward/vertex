@@ -66,12 +66,8 @@ export function EnemyRenderer() {
     countsRef.current.fast = 0
     lockedPositionsRef.current = []
 
-    // Debug: count total active enemies
-    let totalActive = 0
-
     // Update instances from ECS
     for (const entity of world.query(Position, Enemy, Active)) {
-      totalActive++
 
       const pos = entity.get(Position)
       const enemy = entity.get(Enemy)
