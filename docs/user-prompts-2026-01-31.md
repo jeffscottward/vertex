@@ -93,6 +93,26 @@ GACP when you get the chance!
 
 ---
 
+### Prompt 18 - Power Up Demo
+Can we power up this demo? I want to see it in the browser.
+
+---
+
+### Prompt 19 - Kill Demo Server
+Okay, kill the demo server.
+
+---
+
+### Prompt 20 - Turn Demo Back On
+Turn the demo back on.
+
+---
+
+### Prompt 21 - Major Feature Request (Current)
+Git rebase and add enemies that will shoot at you. Also make the tunnel 4 times longer, because we reach the end and turn around pretty quick. Also, the mouse should have a crosshair and a bounding box around it, just like Rez does in the game, and there should be a lock-on mechanism to help fire.
+
+---
+
 ## Summary of Requested Features
 
 - [x] REZ HD-style on-rails rhythm shooter
@@ -116,3 +136,9 @@ GACP when you get the chance!
 - [x] Settings panel (audio/graphics/controls tabs)
 - [x] Control rebinding interface with keyboard support
 - [x] Game over & level complete screens
+- [x] Extended track (4x longer with dramatic curves)
+- [x] Enemy projectile system (enemies shoot at player)
+- [x] Rez-style crosshair with lock-on bounding box
+- [x] Player health/shield system
+- [x] XState game state machine
+- [x] Koota ECS integration
